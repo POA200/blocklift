@@ -4,10 +4,21 @@ import { Lock, MapPin, Zap, Eye } from "lucide-react"
 export default function HowItWorks() {
   return (
     <section className="w-full bg-[var(--background)] text-[var(--foreground)] py-16 md:py-24 mb-12">
+      <style>{`
+        .pulse-soft { animation: pulse-soft 3s ease-in-out infinite; transform-origin: center; }
+        @keyframes pulse-soft {
+          0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+          50% { transform: scale(1.035); box-shadow: 0 18px 40px rgba(0,0,0,0.25); }
+          100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pulse-soft { animation: none !important; }
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row items-center gap-8 md:gap-16">
+        <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
           {/* Content */}
-          <div className="w-full md:w-1/2 order-first md:order-last">
+          <div className="w-full md:w-1/2 order-first md:order-last mb-12">
             <h2 className="text-4xl md:text-5xl font-semibold leading-tight mb-2 text-foreground">
               How It Works:
             </h2>
@@ -59,7 +70,7 @@ export default function HowItWorks() {
           {/* Image */}
           <div className="w-full md:w-1/2 flex justify-center order-last md:order-first">
             <div className="relative flex items-center justify-center">
-              <div className="rounded-full p-6 md:p-10 border-4 border-[var(--primary)]">
+              <div className="rounded-full p-6 md:p-10 border-4 border-[var(--primary)] pulse-soft">
                 <img src={BlHowitworksimg} alt="How it works" className="w-48 md:w-80 block rounded-full object-cover" />
               </div>
             </div>
