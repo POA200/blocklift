@@ -65,8 +65,10 @@ export default function Header() {
               <a onClick={() => setOpen(false)} href="#" className="text-sm text-foreground hover:text-foreground">Community</a>
               <div className="pt-2">
                 <Button variant="default" className="w-full" asChild>
-                  <a href="#">Sponsor Impact</a>
-                  <ArrowUpRight />
+                  <a href="#" className="inline-flex items-center justify-between w-full">
+                    <span>Sponsor Impact</span>
+                    <ArrowUpRight className="h-4 w-4" />
+                  </a>
                 </Button>
               </div>
               <div className="pt-2">
