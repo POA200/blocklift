@@ -56,7 +56,7 @@ export default function Header() {
 
       {/* Mobile menu, shown when open */}
       {open && (
-        <div className="md:hidden border-t border-border bg-[#0b0b0b]">
+        <div className="md:hidden border-t border-border bg-background">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <nav className="flex flex-col gap-3">
               <a onClick={() => setOpen(false)} href="#" className="text-sm text-foreground hover:text-foreground">About</a>
@@ -66,6 +66,7 @@ export default function Header() {
               <div className="pt-2">
                 <Button variant="default" className="w-full" asChild>
                   <a href="#">Sponsor Impact</a>
+                  <ArrowUpRight />
                 </Button>
               </div>
               <div className="pt-2">
