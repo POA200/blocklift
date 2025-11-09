@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react"
+import  { useEffect, useMemo, useState } from "react"
 import LogoSrc from "@/assets/images/BlockliftLogo.png"
-import { LAUNCH_TS, LAUNCH_ISO } from "@/lib/launch"
+import { LAUNCH_TS } from "@/lib/launch"
 import Home from "@/pages/Home"
 
 type TimeLeft = {
