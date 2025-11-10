@@ -20,10 +20,10 @@ export default function Header() {
             </div>
 
             <nav className="hidden md:flex items-center gap-4">
-              <a href="#" className="text-sm text-foreground hover:text-primary">About</a>
-              <a href="#" className="text-sm text-foreground hover:text-primary">Impact</a>
-              <a href="#" className="text-sm text-foreground hover:text-primary">Partners</a>
-              <a href="#" className="text-sm text-foreground hover:text-primary">Community</a>
+              <a href="#about" className="text-sm text-foreground hover:text-primary">About</a>
+              <a href="#impact" className="text-sm text-foreground hover:text-primary">Impact</a>
+              <a href="#partners" className="text-sm text-foreground hover:text-primary">Partners</a>
+              <a href="#impact-chain" className="text-sm text-foreground hover:text-primary">Dashboard</a>
             </nav>
           </div>
 
@@ -59,10 +59,10 @@ export default function Header() {
         <div className="md:hidden border-t border-border bg-background">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <nav className="flex flex-col gap-3">
-              <a onClick={() => setOpen(false)} href="#" className="text-sm text-foreground hover:text-foreground">About</a>
-              <a onClick={() => setOpen(false)} href="#" className="text-sm text-foreground hover:text-foreground">Impact</a>
-              <a onClick={() => setOpen(false)} href="#" className="text-sm text-foreground hover:text-foreground">Partners</a>
-              <a onClick={() => setOpen(false)} href="#" className="text-sm text-foreground hover:text-foreground">Community</a>
+              <a onClick={() => setOpen(false)} href="#about" className="text-sm text-foreground hover:text-foreground">About</a>
+              <a onClick={() => setOpen(false)} href="#impact" className="text-sm text-foreground hover:text-foreground">Impact</a>
+              <a onClick={() => setOpen(false)} href="#partners" className="text-sm text-foreground hover:text-foreground">Partners</a>
+              <a onClick={() => setOpen(false)} href="#impact-chain" className="text-sm text-foreground hover:text-foreground">Dashboard</a>
               <div className="pt-2">
                 <Button variant="default" className="w-full" asChild>
                   <a href="#" className="inline-flex items-center justify-between w-full">
