@@ -1,4 +1,5 @@
 import { useState } from "react"
+import FocusTrap from '@/components/ui/focus-trap'
 import { useForm } from "react-hook-form"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../ui/card"
 import { Button } from "../../ui/button"
@@ -77,7 +78,7 @@ export default function VerificationInput() {
   }
 
   return (
-    <section className="w-full">
+  <section id="verify" tabIndex={-1} className="w-full">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Card className="bg-[var(--surface)] border border-[var(--border)]">
           <CardHeader>
@@ -159,13 +160,15 @@ export default function VerificationInput() {
         {open && (
           <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-background px-4">
             <div className="max-w-lg w-full">
-              <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-2">Verification Successful!</h3>
-                <p className="mb-4 text-[var(--muted-foreground)]">Impact ID <span className="font-mono text-[var(--primary)]">{resultId}</span> is confirmed on the Stacks Blockchain.</p>
-                <div className="flex justify-end gap-2">
-                  <Button onClick={() => setOpen(false)} variant="ghost">Close</Button>
+              <FocusTrap>
+                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-6">
+                  <h3 className="text-lg font-semibold mb-2">Verification Successful!</h3>
+                  <p className="mb-4 text-[var(--muted-foreground)]">Impact ID <span className="font-mono text-[var(--primary)]">{resultId}</span> is confirmed on the Stacks Blockchain.</p>
+                  <div className="flex justify-end gap-2">
+                    <Button onClick={() => setOpen(false)} variant="ghost">Close</Button>
+                  </div>
                 </div>
-              </div>
+              </FocusTrap>
             </div>
           </div>
         )}

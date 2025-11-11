@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import HeroImg from "@/assets/images/BlockliftHeroImage.png"
 import { ArrowUpRight } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export default function HeroSection() {
   return (
@@ -27,12 +28,14 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <Button variant="default" className="cursor-pointer w-full px-8 md:w-auto">
-                Sponsor an Impact Today
-                <ArrowUpRight className="h-4 w-4" />
+              <Button variant="default" className="cursor-pointer w-full px-8 md:w-auto" asChild>
+                <Link to="/sponsor" className="inline-flex items-center gap-2">
+                  Sponsor an Impact Today
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
               </Button>
-              <Button variant="outline" className="cursor-pointer w-full px-8 md:w-auto">
-                See Our Impact-Chain
+              <Button variant="outline" className="cursor-pointer w-full px-8 md:w-auto" asChild>
+                <Link to="/dashboard">See Our Impact-Chain</Link>
               </Button>
             </div>
           </div>

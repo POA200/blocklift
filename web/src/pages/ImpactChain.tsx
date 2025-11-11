@@ -1,0 +1,15 @@
+import SimpleHeader from "@/components/simple-header"
+import SimpleFooter from "@/components/simple-footer"
+
+export default function ImpactChain() {
+	return (
+		<div>
+			<SimpleHeader />
+			<main className="max-w-6xl mx-auto px-6 py-20">
+				<h1 className="text-3xl font-bold mb-4">Impact Chain</h1>
+				<p className="text-sm text-[var(--muted-foreground)] mb-4">This page will host the Impact-Chain dashboard and tracing tools. For now it's a placeholder that points to the Dashboard route.</p>
+			</main>
+			<SimpleFooter />
+		</div>
+	)
+}

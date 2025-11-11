@@ -3,7 +3,7 @@ import { Lock, MapPin, Zap, Eye } from "lucide-react"
 
 export default function HowItWorks() {
   return (
-    <section className="w-full bg-[var(--background)] text-[var(--foreground)] py-16 md:py-24 mb-12">
+    <section id="how-it-works" tabIndex={-1} className="w-full bg-[var(--background)] text-[var(--foreground)] py-16 md:py-24 mb-12">
       <style>{`
         .pulse-soft { animation: pulse-soft 3s ease-in-out infinite; transform-origin: center; }
         @keyframes pulse-soft {

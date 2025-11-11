@@ -1,10 +1,11 @@
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../ui/card"
 import { Button } from "../../ui/button"
 import { Badge } from "../../ui/badge"
+import { Link } from "react-router-dom"
 
 export default function BottomCta() {
   return (
-    <section className="w-full py-16">
+  <section id="sponsor" tabIndex={-1} className="w-full py-16">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="border border-primary bg-primary text-foreground shadow-lg">
@@ -18,7 +19,9 @@ export default function BottomCta() {
               </p>
             </CardContent>
             <CardFooter>
-              <Button className="w-full cursor-pointer" variant={'secondary'} >Sponsor Now!</Button>
+              <Button asChild className="w-full cursor-pointer" variant={'secondary'}>
+                <Link to="/sponsor">Sponsor Now!</Link>
+              </Button>
             </CardFooter>
           </Card>
 
@@ -33,7 +36,9 @@ export default function BottomCta() {
               </p>
             </CardContent>
             <CardFooter>
-              <Button className="w-full cursor-pointer">Volunteer</Button>
+              <Button asChild className="w-full cursor-pointer">
+                <Link to="/volunteer">Volunteer</Link>
+              </Button>
             </CardFooter>
           </Card>
         </div>

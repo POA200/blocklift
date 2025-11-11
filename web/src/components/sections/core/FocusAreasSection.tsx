@@ -26,7 +26,7 @@ export default function FocusAreasSection() {
   ]
 
   return (
-    <section className="w-full">
+    <section id="about" tabIndex={-1} className="w-full">
       <div className="max-w-7xl mx-auto px-6 py-20">
         <h2 className="text-center text-2xl md:text-3xl font-extrabold mb-10">Core Focus Areas</h2>
 

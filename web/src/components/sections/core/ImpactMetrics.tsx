@@ -41,7 +41,7 @@ export default function ImpactMetrics() {
   }, [])
 
   return (
-    <section className="w-full">
+    <section id="impact" tabIndex={-1} className="w-full bg-[var(--background)] text-[var(--foreground)] py-12 md:py-20">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center mb-6">
           <h2 className="text-2xl md:text-4xl font-extrabold">Impact Snapshot</h2>
