@@ -29,9 +29,10 @@ export default function Footer() {
                 <img src={LogoSrc} alt="Blocklift" className="h-8 w-auto" />
                 <span className="text-lg font-semibold">BLOCKLIFT</span>
               </div>
-              <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} BLOCKLIFT, All Rights Reserved</div>
+              <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} BLOCKLIFT, All Rights Reserved
+                <p>Powered by Stacks</p></div>
               <div className="text-xs text-muted-foreground">
-                Contents in this page is proudly designed and developed by iPeter_crx on X(Twitter)
+                <p>Contents in this page is proudly designed and developed by iPeter_crx on X(Twitter)</p>
               </div>
             </div>
 
