@@ -69,7 +69,7 @@ export default function Countdown({ onFinish }: { onFinish?: () => void }) {
         <img src={LogoSrc} alt="Blocklift" className="mx-auto h-16 w-auto mb-6" />
         <h1 className="text-3xl md:text-4xl font-semibold mb-2">We&apos;re launching soon</h1>
         <p className="text-sm md:text-base text-[var(--muted-foreground)] mb-8">
-          BLOCKLIFT is currently under active development. We&apos;ll be live in the next a few days thanks for your patience. Below is the time remaining until launch.
+          BLOCKLIFT is currently under active development. We&apos;ll be live in a few days thanks for your patience. Below is the time remaining until launch.
         </p>
 
         <div className="grid grid-cols-4 gap-4 md:gap-6 mb-6">
