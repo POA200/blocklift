@@ -41,7 +41,7 @@ export default function HowItWorks() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-[var(--foreground)]">Field Verification</h3>
-                  <p className="text-sm text-[var(--muted-foreground)]">Our partners (LFBI) and Local Ambassadors procure materials and verify delivery on the ground.</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">Our partners and Local Ambassadors procure materials and verify delivery on the ground.</p>
                 </div>
               </div>
 

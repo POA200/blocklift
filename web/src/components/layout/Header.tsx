@@ -1,5 +1,5 @@
 import { useState } from "react"
-import LogoSrc from "@/assets/images/BlockliftLogo.png"
+import LogoSrc from "@/assets/images/BlockliftHeaderLogo.svg"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { ModeToggle } from "../mode-toggle"
@@ -27,10 +27,8 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Left: logo + nav (nav sits close to logo, ~24px gap) */}
           <div className="flex items-center gap-6">
-            <Link to="/hero" className="flex items-center gap-1 inline-flex" aria-label="Blocklift home">
-              <img src={LogoSrc} alt="Blocklift" className="h-8 w-auto" />
-              {/* Show brand text on all sizes (including mobile) */}
-              <span className="ml-2 text-lg font-semibold text-foreground">BLOCKLIFT</span>
+            <Link to="/" className="flex items-center gap-1 inline-flex" aria-label="Blocklift home">
+              <img src={LogoSrc} alt="Blocklift" className="h-5 w-auto" />
             </Link>
 
               <nav className="hidden md:flex items-center gap-4">

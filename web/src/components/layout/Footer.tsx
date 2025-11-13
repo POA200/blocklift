@@ -1,4 +1,4 @@
-import LogoSrc from "@/assets/images/BlockliftLogo.png"
+import LogoSrc from "@/assets/images/BlockliftHeaderLogo.svg"
 import { Link } from 'react-router-dom'
 // Use Simple Icons CDN images for brand logos (white fill)
 
@@ -49,8 +49,7 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <img src={LogoSrc} alt="Blocklift" className="h-8 w-auto" />
-                <span className="text-lg font-semibold">BLOCKLIFT</span>
+                <img src={LogoSrc} alt="Blocklift" className="h-5 w-auto" />
               </div>
               <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} BLOCKLIFT, All Rights Reserved
                 <p>Powered by Stacks</p></div>

@@ -11,9 +11,9 @@ export default function Home() {
   return (
     <Layout>
       <HeroSection />
-  <ImpactMetrics />
-  <VerificationInput />
-  <FocusAreasSection />
+      <ImpactMetrics />
+      <VerificationInput />
+      <FocusAreasSection />
       <HowItWorks />
       <Collaborations />
       <BottomCta />

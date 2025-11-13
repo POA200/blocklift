@@ -2,7 +2,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "../../ui/button"
 import { Users } from "lucide-react"
 import labLogo from '@/assets/images/lab.jpg'
-import lfbLogo from '@/assets/images/lfb.jpg'
+import flatLogo from '@/assets/images/flat.jpg'
 import { useState } from 'react'
 import FocusTrap from '@/components/ui/focus-trap'
 
@@ -13,9 +13,9 @@ const partners = [
 		metric: "200 Students Reached",
 	},
 	{
-		name: "Lagos Food Bank Initiative (LFBI)",
-		role: "Food Distribution Partner",
-		metric: "3,400 Meals/mo",
+		name: "Flatearth Memecoin ($FLAT)",
+		role: "Memecoin Partner",
+		metric: "1M+ Tokens Donated",
 	},
 	{
 		name: "Local Ambassadors & Volunteers",
@@ -39,14 +39,14 @@ export default function Collaborations() {
 					{partners.map((p, i) => (
 						<Card key={i} className="p-3">
 							<CardHeader className="flex items-center gap-4 px-4 py-3">
-								{/* LAB logo */}
+								{/* LAB, Flatearth logo, or generic avatar */}
 								{p.name.includes('Let Africa Build') ? (
 									<img src={labLogo} alt="Let Africa Build logo" className="w-14 h-14 object-contain rounded-md bg-transparent" />
-								) : p.name.includes('Lagos Food Bank') ? (
-									<img src={lfbLogo} alt="Lagos Food Bank Initiative logo" className="w-14 h-14 object-contain rounded-md bg-transparent" />
+								) : p.name.includes('Flatearth') ? (
+									<img src={flatLogo} alt="Flatearth memecoin" className="w-14 h-14 object-contain rounded-md bg-transparent" />
 								) : (
-									<div className="w-10 h-10 flex items-center justify-center rounded-md bg-[var(--primary)]">
-										<Users className="w-5 h-5 text-white" />
+									<div className="w-14 h-14 flex items-center justify-center rounded-md bg-primary/10">
+										<Users className="w-7 h-7 text-primary" />
 									</div>
 								)}
 
@@ -56,7 +56,7 @@ export default function Collaborations() {
 								</div>
 							</CardHeader>
 
-							<CardContent className="px-4 pb-0 pt-2">
+							<CardContent className="px-4">
 								<p className="text-sm text-[var(--muted-foreground)]">{p.metric}</p>
 							</CardContent>
 

@@ -8,7 +8,7 @@ export const impactMetrics = [
   {
     key: "children_equipped",
     label: "Children Equipped",
-    desc: "Nutritious meals & learning kits delivered",
+    desc: "learning kits delivered",
     value: 5000,
     suffix: "+",
   },
