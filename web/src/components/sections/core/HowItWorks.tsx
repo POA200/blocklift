@@ -5,7 +5,7 @@ export default function HowItWorks() {
   return (
     <section id="how-it-works" tabIndex={-1} className="w-full bg-[var(--background)] text-[var(--foreground)] py-16 md:py-24 mb-12">
       <style>{`
-        .pulse-soft { animation: pulse-soft 3s ease-in-out infinite; transform-origin: center; }
+        .pulse-soft { animation: pulse-soft 1s ease-in-out infinite; transform-origin: center; }
         @keyframes pulse-soft {
           0% { transform: scale(1); box-shadow: 0 0 0 rgba(0,0,0,0); }
           50% { transform: scale(1.035); box-shadow: 0 18px 40px rgba(0,0,0,0.25); }

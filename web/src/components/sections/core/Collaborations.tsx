@@ -32,7 +32,8 @@ export default function Collaborations() {
 	return (
 		<section id="partners" tabIndex={-1} className="w-full text-foreground py-12 mb-12">
 			<div className="max-w-7xl mx-auto px-6">
-				<h2 className="text-3xl md:text-4xl font-semibold text-center mb-8 md:mb-12">Impact Network</h2>
+				<p className="text-md md:text-xl font-light text-center text-primary">Impact Network</p>
+				<h2 className="text-4xl md:text-5xl font-semibold text-center mb-8 md:mb-12">Partners</h2>
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 					{partners.map((p, i) => (

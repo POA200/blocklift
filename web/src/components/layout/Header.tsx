@@ -27,7 +27,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Left: logo + nav (nav sits close to logo, ~24px gap) */}
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2 inline-flex" aria-label="Blocklift home">
+            <Link to="/hero" className="flex items-center gap-1 inline-flex" aria-label="Blocklift home">
               <img src={LogoSrc} alt="Blocklift" className="h-8 w-auto" />
               {/* Show brand text on all sizes (including mobile) */}
               <span className="ml-2 text-lg font-semibold text-foreground">BLOCKLIFT</span>

@@ -124,11 +124,11 @@ export default function VerificationInput() {
                     ) : null}
                   </div>
                 </div>
+              </div>
 
-                <Button type="submit" className="w-full md:w-auto md:-ml-px md:rounded-l-none md:rounded-r-md" aria-label="Verify impact" disabled={isSubmitting}>
+                <Button type="submit" className="w-full md:w-auto md:-ml-px" aria-label="Verify impact" disabled={isSubmitting}>
                   Verify
                 </Button>
-              </div>
 
               <div className="mt-2 flex items-center justify-between gap-4">
                 <div className="text-xs text-[var(--muted-foreground)]" aria-live="polite">
@@ -137,14 +137,14 @@ export default function VerificationInput() {
                       Will verify: <span className="font-mono text-[var(--primary)]">{trimmedValue}</span>
                     </span>
                   ) : (
-                    <span>Enter a Tx hash or NFT ID and press Verify (or Ctrl/Cmd+Enter).</span>
+                    <span>Enter a Tx hash or NFT ID and press Verify.</span>
                   )}
                 </div>
                 <div className="text-xs" aria-live="assertive">
                   {errors.id ? (
-                    <span className="text-red-400">Please enter a valid ID.</span>
+                    <span className="text-destructive">Please enter a valid ID.</span>
                   ) : status === 'error' ? (
-                    <span className="text-red-400">{statusMessage}</span>
+                    <span className="text-destructive">{statusMessage}</span>
                   ) : status === 'success' ? (
                     <span className="text-emerald-400">{statusMessage}</span>
                   ) : null}

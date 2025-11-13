@@ -52,18 +52,16 @@ export default function Countdown({ onFinish }: { onFinish?: () => void }) {
 
   return (
     <main className="min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] flex items-center justify-center py-16 px-6 relative">
-      {/* Dev shortcut button (visible only in Vite dev) */}
-      {import.meta.env.DEV && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <button
-            onClick={() => setDevViewHome((v) => !v)}
-            className="bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] px-3 py-2 rounded-md text-sm shadow-sm"
-            title="Toggle View Home (dev only)"
-          >
-            {devViewHome ? "Back to Countdown" : "Go to Home (dev)"}
-          </button>
-        </div>
-      )}
+      {/* Toggle to view Home inline (available to all users) */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setDevViewHome((v) => !v)}
+          className="bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] px-3 py-2 rounded-md text-sm shadow-sm"
+          title="Toggle view Home"
+        >
+          {devViewHome ? "Back to Countdown" : "View Home"}
+        </button>
+      </div>
 
       <div className="max-w-3xl w-full text-center">
         <img src={LogoSrc} alt="Blocklift" className="mx-auto h-16 w-auto mb-6" />
