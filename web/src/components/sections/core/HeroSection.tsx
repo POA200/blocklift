@@ -38,17 +38,17 @@ export default function HeroSection() {
               <span className="text-primary">Secured by Bitcoin.</span>
             </h1>
             <p className="text-sm md:text-lg text-muted-foreground max-w-xl">
-              BlockLift is the blockchain-powered platform ensuring every donation of essential school supplies to African children is verified, traceable, and transparent on the Bitcoin Layer 2.
+              BlockLift is the blockchain-powered platform ensuring every donation of essential school supplies to African children is verified, traceable, and transparent on the leading Bitcoin Layer 2, Stacks.
             </p>
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <Button variant="default" className="cursor-pointer w-full px-8 md:w-auto" asChild>
+              <Button variant="default" className="cursor-pointer w-full px-8 md:w-auto" size={'lg'} asChild>
                 <Link to="/sponsor" className="inline-flex items-center gap-2">
                   Sponsor an Impact Today
                   <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" className="cursor-pointer w-full px-8 md:w-auto" asChild>
+              <Button variant="outline" className="cursor-pointer w-full px-8 md:w-auto" size={'lg'} asChild>
                 <Link to="/dashboard">See Our Impact-Chain</Link>
               </Button>
             </div>

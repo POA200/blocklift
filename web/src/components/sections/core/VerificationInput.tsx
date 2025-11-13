@@ -82,7 +82,7 @@ export default function VerificationInput() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Card className="bg-[var(--surface)] border border-[var(--border)]">
           <CardHeader>
-            <CardTitle className="text-lg md:text-xl">Verify Your Impact: Instant On-Chain Audit</CardTitle>
+            <CardTitle className="text-lg md:text-xl">Verify Your Impact: Impact Chain Verification Audit (ICV)</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col md:flex-row gap-3 items-stretch w-full">

@@ -34,8 +34,13 @@ export const impactMetrics = [
 ]
 
 export async function fetchMetrics() {
-  // Try the local mock server first (dev). Falls back to the bundled metrics.
-  const url = typeof window !== 'undefined' ? (window.__METRICS_URL__ || 'http://localhost:4001/metrics') : 'http://localhost:4001/metrics'
+  // Try the local mock server when in development or when a custom metrics URL is provided.
+  // In production we avoid calling localhost to prevent console network errors.
+  const hasCustom = typeof window !== 'undefined' && !!window.__METRICS_URL__
+  const shouldTryMock = import.meta.env.DEV || hasCustom
+  if (!shouldTryMock) return impactMetrics
+
+  const url = (typeof window !== 'undefined' && window.__METRICS_URL__) || 'http://localhost:4001/metrics'
   try {
     const res = await fetch(url, { mode: 'cors' })
     if (!res.ok) throw new Error('fetch failed')
