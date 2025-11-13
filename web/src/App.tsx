@@ -1,8 +1,7 @@
 import { ThemeProvider } from "./components/theme-provider"
 import Countdown from "./pages/Countdown"
 import { Routes, Route, useLocation } from "react-router-dom"
-import { useEffect, useState } from "react"
-import { LAUNCH_TS } from "./lib/launch"
+import { useEffect } from "react"
 import Home from "./pages/Home"
 import Dashboard from "./pages/Dashboard"
 import Sponsor from "./pages/Sponsor"
@@ -30,22 +29,15 @@ function ScrollToHash() {
 }
 
 function App() {
-  const [showHome, setShowHome] = useState(() => Date.now() >= LAUNCH_TS)
-
-  useEffect(() => {
-    // in case LAUNCH_TS is updated dynamically in future, keep the check
-    if (Date.now() >= LAUNCH_TS) setShowHome(true)
-  }, [])
+  // Countdown no longer toggles Home automatically here; it is available at /countdown
 
   return (
     <>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <ScrollToHash />
         <Routes>
-          <Route
-            path="/"
-            element={showHome ? <Home /> : <Countdown onFinish={() => setShowHome(true)} />}
-          />
+          <Route path="/" element={<Home />} />
+          <Route path="/countdown" element={<Countdown />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/impact-chain" element={<Dashboard />} />
           <Route path="/sponsor" element={<Sponsor />} />

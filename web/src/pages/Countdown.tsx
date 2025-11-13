@@ -1,7 +1,8 @@
 import  { useEffect, useMemo, useState } from "react"
+import { useNavigate } from 'react-router-dom'
 import LogoSrc from "@/assets/images/BlockliftLogo.png"
 import { LAUNCH_TS } from "@/lib/launch"
-import Home from "@/pages/Home"
+// Home component import removed (Countdown now navigates to Home route instead of rendering inline)
 
 type TimeLeft = {
   days: number
@@ -25,8 +26,7 @@ export default function Countdown({ onFinish }: { onFinish?: () => void }) {
   const initialTarget = useMemo(() => LAUNCH_TS, [])
   const [target] = useState<number>(initialTarget)
   const [timeLeft, setTimeLeft] = useState<TimeLeft>(() => calcTimeLeft(target))
-  // dev-only: allow toggling to view Home locally without changing app state
-  const [devViewHome, setDevViewHome] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (target <= Date.now()) {
@@ -45,21 +45,18 @@ export default function Countdown({ onFinish }: { onFinish?: () => void }) {
     return () => clearInterval(id)
   }, [target, onFinish])
 
-  if (import.meta.env.DEV && devViewHome) {
-    // when in dev and the developer toggled the view, render Home inline so you can work on other pages
-    return <Home />
-  }
+  // (removed dev-only inline Home rendering) - navigation will go to the Home route.
 
   return (
     <main className="min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] flex items-center justify-center py-16 px-6 relative">
-      {/* Toggle to view Home inline (available to all users) */}
+      {/* Shortcut: navigate to Home */}
       <div className="fixed bottom-6 right-6 z-50">
         <button
-          onClick={() => setDevViewHome((v) => !v)}
+          onClick={() => navigate('/')}
           className="bg-[var(--surface)] border border-[var(--border)] text-[var(--foreground)] px-3 py-2 rounded-md text-sm shadow-sm"
-          title="Toggle view Home"
+          title="Go to Home"
         >
-          {devViewHome ? "Back to Countdown" : "View Home"}
+          Go to Home
         </button>
       </div>
 
