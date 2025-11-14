@@ -51,10 +51,11 @@ export default function Footer() {
               <div className="flex items-center gap-2">
                 <img src={LogoSrc} alt="Blocklift" className="h-5 w-auto" />
               </div>
-              <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} BLOCKLIFT, All Rights Reserved
-                <p>Powered by Stacks</p></div>
-              <div className="text-xs text-muted-foreground">
-                <p>Contents in this page is proudly designed and developed by iPeter_crx on X(Twitter)</p>
+              <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} BLOCKLIFT
+                <p className="text-primary">Powered by Stacks</p>
+                </div>
+              <div className="text-xs">
+                <p className="text-muted-foreground">Contents in this page is proudly designed and developed by <a href="https://twitter.com/iPeter_crx" target="_blank" rel="noreferrer noopener" className="text-blue-400">iPeter_crx</a></p>
               </div>
             </div>
 
@@ -62,16 +63,13 @@ export default function Footer() {
               <h4 className="text-sm font-medium mb-3">Navigation</h4>
                 <ul className="flex flex-col space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <Link to="/">Home</Link>
-                  </li>
-                  <li>
                     <Link to="/#about">About Us</Link>
                   </li>
                   <li>
                     <Link to="/#about">Core Focus Areas</Link>
                   </li>
                   <li>
-                    <Link to="/blog">Blog</Link>
+                    <Link to="/#how-it-works">How It Works</Link>
                   </li>
                 </ul>
             </div>
@@ -83,10 +81,10 @@ export default function Footer() {
                     <Link to="/dashboard">Impact-Chain Dashboard</Link>
                   </li>
                   <li>
-                    <Link to="/#how-it-works">How It Works</Link>
+                    <Link to="/#verify">NFT Proof</Link>
                   </li>
                   <li>
-                    <Link to="/#verify">NFT Proof</Link>
+                    <a href="https://github.com/POA200/blocklift" target="_blank" rel="noreferrer noopener">GitHub</a>
                   </li>
                 </ul>
             </div>
@@ -99,6 +97,9 @@ export default function Footer() {
                   </li>
                   <li>
                     <Link to="/legal/terms">Terms & Conditions</Link>
+                  </li>
+                  <li>
+                    <Link to="/blog">Blog</Link>
                   </li>
                 </ul>
             </div>

@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react"
 import { ModeToggle } from "../mode-toggle"
 import { ArrowUpRight } from "lucide-react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
+import AdsBanner from "./AdsBanner"
 
 export default function Header() {
   const [open, setOpen] = useState(false)
@@ -22,9 +23,10 @@ export default function Header() {
     }
   }
   return (
-    <header className="fixed top-13 left-0 right-0 border-b border-border z-50 bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <header className="fixed top-0 left-0 right-0 z-50">
+      <AdsBanner />
+      <div className="w-full border-b border-border/80 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           {/* Left: logo + nav (nav sits close to logo, ~24px gap) */}
           <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center gap-1 inline-flex" aria-label="Blocklift home">
@@ -35,6 +37,7 @@ export default function Header() {
                 <a href="#about" onClick={(e) => { e.preventDefault(); handleHash('about') }} className="text-sm text-foreground hover:text-primary">About</a>
                 <a href="#impact" onClick={(e) => { e.preventDefault(); handleHash('impact') }} className="text-sm text-foreground hover:text-primary">Impact</a>
                 <a href="#partners" onClick={(e) => { e.preventDefault(); handleHash('partners') }} className="text-sm text-foreground hover:text-primary">Partners</a>
+                <a href="#gallery" onClick={(e) => { e.preventDefault(); handleHash('partners') }} className="text-sm text-foreground hover:text-primary">Gallery</a>
                 <Link to="/dashboard" className="text-sm text-foreground hover:text-primary">Dashboard</Link>
               </nav>
           </div>

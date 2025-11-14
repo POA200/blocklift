@@ -5,7 +5,9 @@ import ImpactMetrics from "../components/sections/core/ImpactMetrics"
 import VerificationInput from "../components/sections/core/VerificationInput"
 import HowItWorks from "../components/sections/core/HowItWorks"
 import Collaborations from "../components/sections/core/Collaborations"
+import ImpactGallery from "../components/sections/core/ImpactGallery"
 import BottomCta from "../components/sections/core/BottomCta"
+import ImpactVideos from "@/components/sections/core/ImpactVideos"
 
 export default function Home() {
   return (
@@ -16,6 +18,8 @@ export default function Home() {
       <FocusAreasSection />
       <HowItWorks />
       <Collaborations />
+      <ImpactGallery />
+      <ImpactVideos />
       <BottomCta />
     </Layout>
   )

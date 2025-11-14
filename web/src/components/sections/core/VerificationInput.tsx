@@ -9,6 +9,99 @@ type FormData = {
   id: string
 }
 
+const network = import.meta.env.VITE_NETWORK || 'testnet'
+
+export const waitForTxConfirmed = async (txId: string, opts?: { timeoutMs?: number; intervalMs?: number }): Promise<void> => {
+  console.log('waiting for tx to confirm → starting (poll-only)')
+  const controller = new AbortController()
+  const timeoutMs = opts?.timeoutMs ?? 5 * 60_000 // default 5 minutes
+  const intervalMs = opts?.intervalMs ?? 5_000 // default 5s polling
+
+  const start = Date.now()
+
+  const isExpectedError = (reason: string | undefined): boolean => {
+    if (!reason) return false
+
+    const errorPatterns = [
+      /\bu5\b/i,
+      /\bu9\b/i,
+      /\(err u5\)/i,
+      /\(err u9\)/i,
+      /err-u5/i,
+      /err-u9/i,
+    ]
+
+    return errorPatterns.some((pattern) => pattern.test(reason))
+  }
+
+  // Basic tx id validation (hex, optionally leading 0x, 64 hex chars)
+  const txRegex = /^(0x)?[0-9a-fA-F]{64}$/
+  if (!txRegex.test(txId)) {
+    throw new Error('Invalid transaction id format — expected 64 hex characters (optionally prefixed with 0x)')
+  }
+
+  while (true) {
+    if (Date.now() - start > timeoutMs) {
+      throw new Error('Timeout waiting for transaction confirmation')
+    }
+
+    let res: Response
+    try {
+      res = await fetch(`https://api.${network}.hiro.so/extended/v1/tx/${txId}`, { signal: controller.signal })
+    } catch (err) {
+      throw err
+    }
+
+    if (!res.ok) {
+      let bodyText = ''
+      try {
+        bodyText = await res.text()
+      } catch (e) {
+        bodyText = `<unable to read body: ${String(e)}>`
+      }
+
+      // If Hiro doesn't know the tx (404), try the Stacks Node API as a fallback
+      if (res.status === 404) {
+        try {
+          const alt = await fetch(`https://stacks-node-api.${network}.stacks.co/extended/v1/tx/${txId}`, { signal: controller.signal })
+          if (alt.ok) {
+            const altData = await alt.json()
+            console.log('🔁 fallback stacks-node-api result:', altData.tx_status)
+            if (altData.tx_status === 'success') return
+            if (altData.tx_status === 'abort_by_response' || altData.tx_status === 'abort_by_post_condition') {
+              const reason = altData.tx_result?.repr
+              if (isExpectedError(reason)) return
+              throw new Error(`Transaction failed or was aborted: ${reason || 'unknown reason'}`)
+            }
+            // otherwise continue polling
+          }
+        } catch (e) {
+          console.warn('Fallback to stacks-node-api failed:', e)
+        }
+      }
+
+      // Non-OK from Hiro and fallback didn't resolve -> surface error for debugging
+      throw new Error(`Hiro API ${res.status} ${res.statusText}: ${bodyText}`)
+    }
+
+    const data = await res.json()
+    console.log('� polling tx status:', data.tx_status)
+
+    if (data.tx_status === 'success') {
+      return
+    }
+
+    if (data.tx_status === 'abort_by_response' || data.tx_status === 'abort_by_post_condition') {
+      const reason = data.tx_result?.repr
+      if (isExpectedError(reason)) return
+      throw new Error(`Transaction failed or was aborted: ${reason || 'unknown reason'}`)
+    }
+
+    // wait and poll again
+    await new Promise((r) => setTimeout(r, intervalMs))
+  }
+}
+
 export default function VerificationInput() {
   const {
     register,
@@ -21,6 +114,7 @@ export default function VerificationInput() {
   const [open, setOpen] = useState(false)
   const [resultId, setResultId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [lastTx, setLastTx] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
@@ -31,47 +125,44 @@ export default function VerificationInput() {
     const value = (data.id || '').trim()
     if (!value) return
 
+    setLastTx(value)
+
     setIsSubmitting(true)
     setStatus('loading')
     setStatusMessage(null)
 
-    const apiUrl = import.meta.env.VITE_VERIFICATION_API || '/api/verify'
-
     try {
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: value }),
-      })
+      // Wait for transaction confirmation on Stacks (Hiro API + websocket)
+      await waitForTxConfirmed(value)
 
-      if (!res.ok) {
-        let text = await res.text()
-        try {
-          const j = JSON.parse(text)
-          text = j?.message || text
-        } catch (e) {
-          // keep raw text
-        }
-        throw new Error(text || `Server returned ${res.status}`)
-      }
-
-      const json = await res.json().catch(() => ({}))
-      const ok = json?.ok ?? true
-      const message = json?.message ?? (ok ? 'Verified' : 'Not verified')
-
-      if (ok) {
-        setStatus('success')
-        setStatusMessage(message)
-        setResultId(value)
-        setOpen(true)
-        reset()
-      } else {
-        setStatus('error')
-        setStatusMessage(message || 'Not verified')
-      }
+      setStatus('success')
+      setStatusMessage('Transaction confirmed on Stacks')
+      setResultId(value)
+      setOpen(true)
+      reset()
     } catch (err: any) {
       setStatus('error')
-      setStatusMessage(err?.message || 'Network or verification error')
+      setStatusMessage(err?.message || 'Failed to confirm transaction')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleRetry = async () => {
+    if (!lastTx) return
+    setIsSubmitting(true)
+    setStatus('loading')
+    setStatusMessage(null)
+    try {
+      await waitForTxConfirmed(lastTx)
+      setStatus('success')
+      setStatusMessage('Transaction confirmed on Stacks')
+      setResultId(lastTx)
+      setOpen(true)
+      setLastTx(null)
+    } catch (err: any) {
+      setStatus('error')
+      setStatusMessage(err?.message || 'Failed to confirm transaction')
     } finally {
       setIsSubmitting(false)
     }
@@ -136,15 +227,21 @@ export default function VerificationInput() {
                     <span>
                       Will verify: <span className="font-mono text-[var(--primary)]">{trimmedValue}</span>
                     </span>
-                  ) : (
-                    <span>Enter a Tx hash or NFT ID and press Verify.</span>
-                  )}
+                  ) : null}
                 </div>
                 <div className="text-xs" aria-live="assertive">
                   {errors.id ? (
                     <span className="text-destructive">Please enter a valid ID.</span>
                   ) : status === 'error' ? (
-                    <span className="text-destructive">{statusMessage}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-destructive">{statusMessage}</span>
+                      {/* If the error looks like a 404 / not found, offer a retry button */}
+                      {lastTx && /404|not found/i.test(String(statusMessage)) ? (
+                        <Button onClick={handleRetry} size={'sm'} className="ml-2" disabled={isSubmitting} variant="ghost">
+                          Retry
+                        </Button>
+                      ) : null}
+                    </div>
                   ) : status === 'success' ? (
                     <span className="text-emerald-400">{statusMessage}</span>
                   ) : null}
@@ -153,7 +250,7 @@ export default function VerificationInput() {
             </form>
           </CardContent>
           <CardFooter>
-            <p className="text-xs text-[var(--muted-foreground)]">This performs a client-side check (MVP). Full Stacks verification will be added soon.</p>
+            <p className="text-xs text-[var(--muted-foreground)]">Enter a Tx hash or NFT ID and press Verify.</p>
           </CardFooter>
         </Card>
 
