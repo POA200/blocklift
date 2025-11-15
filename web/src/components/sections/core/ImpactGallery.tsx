@@ -29,18 +29,6 @@ const galleryItems = [
     title: 'Web3 Awareness',
     description: 'Educating communities about the potential of Web3 technologies.',
   },
-  {
-    src: BlockliftLogo,
-    alt: 'Community Engagement (Blocklift Logo Placeholder)',
-    title: 'Community Engagement',
-    description: 'Working closely with local communities to ensure sustainable impact.',
-  },
-  {
-    src: BlockliftLogo,
-    alt: 'Food & Aid Logistics (Blocklift Logo Placeholder)',
-    title: 'Food & Aid Logistics',
-    description: 'Streamlining the delivery of food and aid to remote locations.',
-  },
 ]
 
 const GalleryItem = ({ item }: { item: (typeof galleryItems)[0] }) => {
@@ -97,7 +85,7 @@ export default function ImpactGallery() {
           <p className="text-xs uppercase tracking-wider text-primary mb-2">Gallery section</p>
           <h2 className="text-2xl md:text-4xl font-semibold mb-2 md:mb-4">BlockLift in Action</h2>
         </div>
-        <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6">
           {galleryItems.map((item, i) => (
             <GalleryItem item={item} key={i} />
           ))}

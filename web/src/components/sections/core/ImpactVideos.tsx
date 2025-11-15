@@ -43,20 +43,6 @@ const videoCards: VideoCardData[] = [
     href: '/videos/logistics',
     videoSrc: PLACEHOLDER_VIDEO,
   },
-  {
-    title: 'Aid Packaging',
-    description: 'Preparing aid parcels with scannable identifiers before dispatch.',
-    image: BlockliftLogo,
-    href: '/videos/aid-packaging',
-    videoSrc: PLACEHOLDER_VIDEO,
-  },
-  {
-    title: 'Community Engagement',
-    description: 'Gathering feedback from recipients to refine distribution flows.',
-    image: BlockliftLogo,
-    href: '/videos/community-engagement',
-    videoSrc: PLACEHOLDER_VIDEO,
-  },
 ]
 
 export default function ImpactVideos() {
@@ -88,7 +74,7 @@ export default function ImpactVideos() {
           <p className="text-sm text-muted-foreground">Explore short field clips documenting verifiable impact processes, community engagement, and transparent logistics.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {videoCards.map((card, idx) => (
             <Card key={card.href} className="flex flex-col overflow-hidden border border-[var(--border)] bg-[var(--surface)]">
               <div className="relative aspect-video bg-black/5 flex items-center justify-center">
