@@ -1,53 +1,107 @@
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselPrevious,
-  CarouselNext,
-} from '@/components/ui/carousel'
+import { useEffect, useRef } from 'react'
+import BlockliftLogo from '/src/assets/images/BlockliftLogo.png'
 
-const makeSvgData = (text: string, w = 1400, h = 700, bg = 'rgba(255, 117, 32, 0.11)', fg = '#ff6a1aff') => {
-  const svg = `<?xml version="1.0" encoding="UTF-8"?>
-  <svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>
-    <rect width='100%' height='100%' fill='${bg}' />
-    <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='${fg}' font-family='Inter, Arial, sans-serif' font-size='36'>${text}</text>
-  </svg>`
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
-}
-
-const images = [
-  makeSvgData('Supplies Distribution'),
-  makeSvgData('Local Ambassador Verification'),
-  makeSvgData('Children in Classroom'),
-  makeSvgData('Web3 Awareness Session'),
+// Six uniform gallery items for 3x2 desktop, 2x3 tablet, 1x6 mobile
+const galleryItems = [
+  // Replace makeSvgData with the imported BlockliftLogo path
+  {
+    src: BlockliftLogo,
+    alt: 'Supplies Distribution (Blocklift Logo Placeholder)',
+    title: 'Supplies Distribution',
+    description: 'Ensuring essential supplies reach the communities that need them most.',
+    priority: true,
+  },
+  {
+    src: BlockliftLogo,
+    alt: 'Local Ambassador Verification (Blocklift Logo Placeholder)',
+    title: 'Local Ambassador Verification',
+    description: 'Our ambassadors on the ground verify and report on project impact.',
+  },
+  {
+    src: BlockliftLogo,
+    alt: 'Children in Classroom (Blocklift Logo Placeholder)',
+    title: 'Education Initiatives',
+    description: 'Providing access to quality education for children in underserved areas.',
+  },
+  {
+    src: BlockliftLogo,
+    alt: 'Web3 Awareness Session (Blocklift Logo Placeholder)',
+    title: 'Web3 Awareness',
+    description: 'Educating communities about the potential of Web3 technologies.',
+  },
+  {
+    src: BlockliftLogo,
+    alt: 'Community Engagement (Blocklift Logo Placeholder)',
+    title: 'Community Engagement',
+    description: 'Working closely with local communities to ensure sustainable impact.',
+  },
+  {
+    src: BlockliftLogo,
+    alt: 'Food & Aid Logistics (Blocklift Logo Placeholder)',
+    title: 'Food & Aid Logistics',
+    description: 'Streamlining the delivery of food and aid to remote locations.',
+  },
 ]
 
-export default function ImpactGallery() {
+const GalleryItem = ({ item }: { item: (typeof galleryItems)[0] }) => {
   return (
-    <section id="gallery" className="w-full py-10">
+    <div className="gallery-item-card relative overflow-hidden rounded-xl bg-[var(--surface)] border border-border aspect-[4/3]">
+      <img
+        src={item.src}
+        alt={item.alt}
+        className="absolute inset-0 w-full h-full object-cover opacity-20"
+        loading={item.priority ? 'eager' : 'lazy'}
+      />
+      <div className="absolute inset-0 flex flex-col justify-end p-6 bg-gradient-to-t from-black/20 to-transparent">
+        <h3 className="text-lg font-semibold text-foreground mb-1">{item.title}</h3>
+        <p className="text-sm text-muted-foreground mt-2">{item.description}</p>
+      </div>
+    </div>
+  )
+}
+
+export default function ImpactGallery() {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const cards = Array.from(container.querySelectorAll<HTMLElement>('.gallery-item-card'))
+    if (!cards.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const el = entry.target as HTMLElement
+          if (entry.isIntersecting) {
+            el.classList.add('is-visible')
+          } else {
+            el.classList.remove('is-visible')
+          }
+        })
+      },
+      { root: null, rootMargin: '0px', threshold: 0.1 }
+    )
+
+    cards.forEach((card) => {
+      observer.observe(card)
+    })
+
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <section id="gallery" className="w-full py-16">
       <div className="max-w-7xl mx-auto px-6">
-  <h2 className="text-2xl md:text-4xl font-semibold mb-8 text-center">BlockLift in Action: Verifiable Impact</h2>
-
-        <Carousel className="relative">
-          <CarouselContent className="gap-4">
-            {images.map((src, i) => (
-              <CarouselItem key={i}>
-                <div className="rounded-lg overflow-hidden shadow-sm">
-                  <img
-                    src={src}
-                    alt={`Impact ${i + 1}`}
-                    className="w-full h-full object-cover block"
-                  />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-
-          <div className="flex items-center justify-center gap-4 mt-6 hidden md:block">
-            <CarouselPrevious />
-            <CarouselNext />
-          </div>
-        </Carousel>
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <p className="text-xs uppercase tracking-wider text-primary mb-2">Gallery section</p>
+          <h2 className="text-2xl md:text-4xl font-semibold mb-2 md:mb-4">BlockLift in Action</h2>
+        </div>
+        <div ref={containerRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {galleryItems.map((item, i) => (
+            <GalleryItem item={item} key={i} />
+          ))}
+        </div>
       </div>
     </section>
   )

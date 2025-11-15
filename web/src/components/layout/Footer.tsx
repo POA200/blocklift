@@ -66,10 +66,10 @@ export default function Footer() {
                     <Link to="/#about">About Us</Link>
                   </li>
                   <li>
-                    <Link to="/#about">Core Focus Areas</Link>
+                    <Link to="/#how-it-works">How It Works</Link>
                   </li>
                   <li>
-                    <Link to="/#how-it-works">How It Works</Link>
+                    <Link to="/#gallery">Gallery</Link>
                   </li>
                 </ul>
             </div>

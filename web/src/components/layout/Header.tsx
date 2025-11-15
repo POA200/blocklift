@@ -37,7 +37,7 @@ export default function Header() {
                 <a href="#about" onClick={(e) => { e.preventDefault(); handleHash('about') }} className="text-sm text-foreground hover:text-primary">About</a>
                 <a href="#impact" onClick={(e) => { e.preventDefault(); handleHash('impact') }} className="text-sm text-foreground hover:text-primary">Impact</a>
                 <a href="#partners" onClick={(e) => { e.preventDefault(); handleHash('partners') }} className="text-sm text-foreground hover:text-primary">Partners</a>
-                <a href="#gallery" onClick={(e) => { e.preventDefault(); handleHash('partners') }} className="text-sm text-foreground hover:text-primary">Gallery</a>
+                <a href="#gallery" onClick={(e) => { e.preventDefault(); handleHash('gallery') }} className="text-sm text-foreground hover:text-primary">Gallery</a>
                 <Link to="/dashboard" className="text-sm text-foreground hover:text-primary">Dashboard</Link>
               </nav>
           </div>
