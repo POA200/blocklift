@@ -1,0 +1,119 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { sql } from '@vercel/postgres'
+
+// Fallback static metrics if DB is unavailable
+const fallback = [
+  { key: 'children_equipped', label: 'Children Equipped', desc: 'learning kits delivered', value: 5000, suffix: '+' },
+  { key: 'verified_donations', label: 'Verified Donations', desc: 'Donations recorded on-chain (verified)', value: 12500, prefix: '$' },
+  { key: 'nft_proofs', label: 'NFT Proofs Minted', desc: 'On-chain receipts minted for donors', value: 1240 },
+  { key: 'field_ambassadors', label: 'Field Ambassadors', desc: 'Local verifiers & volunteers deployed', value: 45 },
+]
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+
+  if (req.method === 'GET') {
+    try {
+      const { rows } = await sql`
+        SELECT key, label, desc, value, prefix, suffix
+        FROM metrics
+        ORDER BY key ASC
+      `
+      if (rows && rows.length) {
+        return res.status(200).json({ metrics: rows })
+      }
+      // Empty table -> return fallback
+      return res.status(200).json({ metrics: fallback })
+    } catch (_) {
+      // If table doesn't exist or any other error, serve fallback
+      return res.status(200).json({ metrics: fallback })
+    }
+  }
+
+  if (req.method === 'POST') {
+    const authHeader = req.headers['authorization'] || ''
+    const bearer = Array.isArray(authHeader) ? authHeader[0] : authHeader
+    const token = (bearer.startsWith('Bearer ') ? bearer.slice(7) : null) || (req.headers['x-api-key'] as string | undefined) || null
+    const secret = process.env.METRICS_ADMIN_TOKEN || ''
+    if (!secret || token !== secret) {
+      return res.status(401).json({ error: 'unauthorized' })
+    }
+
+    let body: any
+    try {
+      body = req.body && typeof req.body === 'object' ? req.body : (req.body ? JSON.parse(req.body as any) : null)
+    } catch (_) {
+      body = null
+    }
+    const updates = Array.isArray(body) ? body : (body?.updates ? body.updates : (body ? [body] : []))
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({ error: 'invalid_payload', message: 'Provide an update object or updates array.' })
+    }
+
+    const results: any[] = []
+    for (const u of updates) {
+      if (!u || typeof u.key !== 'string' || u.key.trim() === '') {
+        return res.status(400).json({ error: 'invalid_item', message: 'Each update must include a non-empty key.' })
+      }
+      const key = u.key.trim()
+      const label = typeof u.label === 'string' ? u.label : undefined
+      const desc = typeof u.desc === 'string' ? u.desc : undefined
+      const value = typeof u.value === 'number' ? u.value : undefined
+      const prefix = typeof u.prefix === 'string' ? u.prefix : (u.prefix === null ? null : undefined)
+      const suffix = typeof u.suffix === 'string' ? u.suffix : (u.suffix === null ? null : undefined)
+
+      // Does the row exist?
+      let exists = false
+      try {
+        const { rows } = await sql`SELECT 1 FROM metrics WHERE key = ${key} LIMIT 1`
+        exists = rows.length > 0
+      } catch (_) {
+        // table might not exist; try to create it
+        try {
+          await sql`CREATE TABLE IF NOT EXISTS metrics (
+            key text PRIMARY KEY,
+            label text NOT NULL,
+            desc text NOT NULL,
+            value integer NOT NULL,
+            prefix text,
+            suffix text,
+            updated_at timestamptz DEFAULT now()
+          )`
+          exists = false
+        } catch (e) {
+          return res.status(500).json({ error: 'db_error', message: 'Unable to ensure metrics table exists.' })
+        }
+      }
+
+      if (!exists) {
+        if (label == null || desc == null || value == null) {
+          return res.status(400).json({ error: 'missing_fields', message: `Creating new key '${key}' requires label, desc, and value.` })
+        }
+        await sql`
+          INSERT INTO metrics (key, label, desc, value, prefix, suffix)
+          VALUES (${key}, ${label}, ${desc}, ${value}, ${prefix ?? null}, ${suffix ?? null})
+        `
+        results.push({ key, created: true })
+      } else {
+        const sets: any[] = []
+        if (label !== undefined) sets.push(sql`label = ${label}`)
+        if (desc !== undefined) sets.push(sql`desc = ${desc}`)
+        if (value !== undefined) sets.push(sql`value = ${value}`)
+        if (prefix !== undefined) sets.push(sql`prefix = ${prefix}`)
+        if (suffix !== undefined) sets.push(sql`suffix = ${suffix}`)
+
+        if (sets.length === 0) {
+          results.push({ key, updated: false })
+        } else {
+          await sql`UPDATE metrics SET ${sql.join(sets, sql`, `)}, updated_at = now() WHERE key = ${key}`
+          results.push({ key, updated: true })
+        }
+      }
+    }
+
+    return res.status(200).json({ ok: true, results })
+  }
+
+  res.setHeader('Allow', 'GET, POST')
+  return res.status(405).json({ error: 'method_not_allowed' })
+}

@@ -71,6 +71,9 @@ export default function Footer() {
                   <li>
                     <Link to="/#gallery">Gallery</Link>
                   </li>
+                  <li>
+                    <Link to="/#education-cta">Education</Link>
+                  </li>
                 </ul>
             </div>
 

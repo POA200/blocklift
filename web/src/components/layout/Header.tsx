@@ -39,6 +39,7 @@ export default function Header() {
                 <a href="#partners" onClick={(e) => { e.preventDefault(); handleHash('partners') }} className="text-sm text-foreground hover:text-primary">Partners</a>
                 <a href="#gallery" onClick={(e) => { e.preventDefault(); handleHash('gallery') }} className="text-sm text-foreground hover:text-primary">Gallery</a>
                 <Link to="/dashboard" className="text-sm text-foreground hover:text-primary">Dashboard</Link>
+                <a href="#education-cta" onClick={(e) => { e.preventDefault(); handleHash('education-cta') }} className="text-sm text-foreground hover:text-primary">Education</a>
               </nav>
           </div>
 
@@ -78,6 +79,7 @@ export default function Header() {
               <a onClick={() => handleHash('impact', true)} href="#impact" className="text-sm text-foreground hover:text-foreground">Impact</a>
               <a onClick={() => handleHash('partners', true)} href="#partners" className="text-sm text-foreground hover:text-foreground">Partners</a>
               <Link onClick={() => setOpen(false)} to="/dashboard" className="text-sm text-foreground hover:text-foreground">Dashboard</Link>
+              <a onClick={() => handleHash('education-cta', true)} href="#education-cta" className="text-sm text-foreground hover:text-foreground">Education</a>
               <div className="pt-2">
                 <Button variant="default" className="w-full" asChild>
                   <Link to="/sponsor" className="inline-flex items-center justify-between w-full">

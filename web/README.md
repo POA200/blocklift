@@ -1,5 +1,53 @@
 # React + TypeScript + Vite
 
+## Metrics API (Vercel + Postgres)
+
+This app exposes `/api/metrics` (Vercel Serverless Function) and reads from Vercel Postgres via `@vercel/postgres`.
+
+Local options:
+
+- Static fallback works out of the box.
+- To seed a Postgres database and serve real values:
+
+```bash
+cd web
+npm install
+# Set POSTGRES_URL in .env.local (see .env.example)
+npm run db:seed
+npm run dev
+```
+
+Deployment:
+
+- Deploy the `web` directory to Vercel. Add a Vercel Postgres database and link it to the project.
+- The function `/api/metrics` will use Postgres automatically via Vercel-provided env vars.
+- The frontend will attempt, in order: `VITE_METRICS_URL` (absolute), `window.__METRICS_URL__` (absolute), `/api/metrics` (prod), mock (dev opt-in), then static fallback.
+
+### Admin updates
+
+Securely update metrics via `POST /api/metrics` with a token.
+
+1. Set `METRICS_ADMIN_TOKEN` in Vercel Project → Settings → Environment Variables (and in `.env.local` for local testing).
+2. Send updates:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $METRICS_ADMIN_TOKEN" \
+  https://<your-vercel-deployment>/api/metrics \
+  -d '{
+    "updates": [
+      {"key": "children_equipped", "value": 5200},
+      {"key": "verified_donations", "value": 13000, "prefix": "$"}
+    ]
+  }'
+```
+
+Notes:
+
+- Creating a new key requires `label`, `desc`, and `value`.
+- Updating an existing key accepts any subset of fields: `label`, `desc`, `value`, `prefix`, `suffix`.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
@@ -17,9 +65,9 @@ If you are developing a production application, we recommend updating the config
 
 ```js
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       // Other configs...
 
@@ -34,40 +82,40 @@ export default defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-])
+]);
 ```
 
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
 // eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+import reactX from "eslint-plugin-react-x";
+import reactDom from "eslint-plugin-react-dom";
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(["dist"]),
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ["**/*.{ts,tsx}"],
     extends: [
       // Other configs...
       // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
+      reactX.configs["recommended-typescript"],
       // Enable lint rules for React DOM
       reactDom.configs.recommended,
     ],
     languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
         tsconfigRootDir: import.meta.dirname,
       },
       // other options...
     },
   },
-])
+]);
 ```

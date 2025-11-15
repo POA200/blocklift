@@ -34,23 +34,38 @@ export const impactMetrics = [
 ]
 
 export async function fetchMetrics() {
-  // Try the local mock server when in development or when a custom metrics URL is provided.
-  // In production we avoid calling localhost to prevent console network errors.
-  const rawCustom = typeof window !== 'undefined' ? window.__METRICS_URL__ : undefined
-  // Only accept an explicit custom URL if it looks like a valid absolute http(s) URL
-  const hasCustom = typeof rawCustom === 'string' && /^https?:\/\//i.test(rawCustom)
-  const shouldTryMock = import.meta.env.DEV || hasCustom
-  if (!shouldTryMock) return impactMetrics
+  // Priority order:
+  // 1) VITE_METRICS_URL (absolute URL)
+  // 2) window.__METRICS_URL__ (absolute URL)
+  // 3) In production, try a relative Vercel function: /api/metrics
+  // 4) In dev, optionally try local mock if VITE_USE_MOCK === '1'
+  // 5) Fallback to static impactMetrics
 
-  const url = hasCustom ? rawCustom : 'http://localhost:4001/metrics'
-  try {
-    const res = await fetch(url, { mode: 'cors' })
-    if (!res.ok) throw new Error('fetch failed')
-    const body = await res.json()
-    if (body?.metrics) return body.metrics
-  } catch (e) {
-    // ignore and return static
+  const envUrl = (import.meta.env.VITE_METRICS_URL as string | undefined) || undefined
+  const rawCustom = typeof window !== 'undefined' ? window.__METRICS_URL__ : undefined
+  const isAbsolute = (u?: string) => !!u && /^https?:\/\//i.test(u)
+
+  const candidates: string[] = []
+  if (isAbsolute(envUrl)) candidates.push(envUrl as string)
+  if (isAbsolute(rawCustom)) candidates.push(rawCustom as string)
+
+  if (import.meta.env.PROD) {
+    candidates.push('/api/metrics')
+  } else if (import.meta.env.DEV && import.meta.env.VITE_USE_MOCK === '1') {
+    candidates.push('http://localhost:4001/metrics')
   }
+
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { mode: 'cors' })
+      if (!res.ok) continue
+      const body = await res.json()
+      if (body?.metrics) return body.metrics
+    } catch (_) {
+      // try next candidate
+    }
+  }
+
   return impactMetrics
 }
 

@@ -8,6 +8,7 @@ import Partners from "../components/sections/core/Partners"
 import ImpactGallery from "../components/sections/core/ImpactGallery"
 import BottomCta from "../components/sections/core/BottomCta"
 import ImpactVideos from "@/components/sections/core/ImpactVideos"
+import EducationCta from "@/components/sections/core/EducationCta"
 
 export default function Home() {
   return (
@@ -20,6 +21,7 @@ export default function Home() {
       <Partners />
       <ImpactGallery />
       <ImpactVideos />
+      <EducationCta />
       <BottomCta />
     </Layout>
   )

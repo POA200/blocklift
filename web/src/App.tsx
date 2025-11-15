@@ -12,6 +12,7 @@ import Terms from './pages/legal/Terms'
 import Blog from "./pages/Blog"
 import Contact from "./pages/Contact"
 import Pay from "./pages/Pay"
+import Education from "./pages/Education"
 
 function ScrollToHash() {
   const { pathname, hash } = useLocation()
@@ -41,6 +42,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/impact-chain" element={<Dashboard />} />
           <Route path="/sponsor" element={<Sponsor />} />
+          <Route path="/education" element={<Education />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/about" element={<About />} />
           <Route path="/blog" element={<Blog />} />
