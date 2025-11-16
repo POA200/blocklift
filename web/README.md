@@ -118,4 +118,85 @@ export default defineConfig([
     },
   },
 ]);
+
+## On-Chain Metrics & Hiro / Stacks Integration
+
+### Why 400 Errors Appeared
+Requests in browser logs like:
+
+```
+
+https://api.mainnet.hiro.so/children-equipped
+https://api.mainnet.hiro.so/verified-donations
+
+````
+
+return 400 because those paths do not exist on Hiro. They originated from a previously committed, stale production bundle (`web/dist/`). The current source code instead:
+
+1. Uses `fetchCallReadOnlyFunction` (Stacks JS) to invoke read‑only Clarity functions.
+2. Falls back to the Vercel serverless function `/api/metrics` for DB + static values.
+
+Delete any committed build artifacts (`dist/`) so Vercel always rebuilds with the updated logic.
+
+### Correct Pattern For Read‑Only Contract Metrics
+Preferred (already used in hooks):
+
+```ts
+import { fetchCallReadOnlyFunction } from '@stacks/transactions'
+import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network'
+
+const network = import.meta.env.VITE_NETWORK === 'testnet' ? STACKS_TESTNET : STACKS_MAINNET
+const cv = await fetchCallReadOnlyFunction({
+  contractAddress: CONTRACT_ADDRESS,
+  contractName: CONTRACT_NAME,
+  functionName: 'get-children-equipped', // map from key
+  functionArgs: [],
+  network,
+  senderAddress: CONTRACT_ADDRESS,
+})
+````
+
+Manual HTTP alternative (not needed if using stacks.js):
+
+```
+POST https://stacks-node-api.<network>.stacks.co/v2/contracts/call-read/<address>/<contract>/<fn>
+Body: {"sender":"<address>","arguments":[]}
+```
+
+### Environment Variables (Vercel)
+
+| Name                    | Value / Notes                                   |
+| ----------------------- | ----------------------------------------------- |
+| `VITE_NETWORK`          | `mainnet` or `testnet`                          |
+| `VITE_CONTRACT_ADDRESS` | Deployed contract address for read‑only calls   |
+| `VITE_CONTRACT_NAME`    | Contract name containing metric functions       |
+| `VITE_METRICS_URL`      | Optional absolute override for metrics endpoint |
+| `METRICS_ADMIN_TOKEN`   | Bearer token for POST /api/metrics updates      |
+
+Optional: `POSTGRES_URL` (auto from Vercel Postgres binding).
+
+### Metrics Resolution Order (Frontend)
+
+1. Absolute `VITE_METRICS_URL`
+2. `window.__METRICS_URL__` (if set before hydration)
+3. `/api/metrics` in production
+4. Local mock (`VITE_USE_MOCK=1`) during dev
+5. Static fallback array
+
+### Caching
+
+`/api/metrics` sets `Cache-Control: s-maxage=300, stale-while-revalidate=600` for edge caching. On‑chain reads bypass this and are always fresh at page load.
+
+### Troubleshooting
+
+- 400/404 on Hiro: ensure you call valid endpoints (`/extended/v1/tx/<txid>` etc.) or use stacks.js helpers.
+- Empty metrics: DB not seeded yet; fallback used.
+- Read‑only call failure: verify contract address/name and function exists (naming `get-<key>` pattern unless overridden).
+
+### Avoid Committing `dist/`
+
+`dist/` is in `.gitignore`. If it becomes tracked, remove it (`git rm -r --cached web/dist`) and commit. Stale bundles can retain old API calls and produce misleading 400 errors after deploy.
+
+```
+
 ```

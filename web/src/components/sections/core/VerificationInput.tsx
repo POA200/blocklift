@@ -279,6 +279,19 @@ export default function VerificationInput() {
                     <p className="text-foreground">Impact ID</p>
                     <p className="font-mono text-primary break-all text-sm max-w-full">{resultId}</p>
                     <p className="text-muted-foreground">is confirmed on the Stacks Blockchain.</p>
+                    {resultId ? (
+                      <p className="text-sm mt-3">
+                        View on Explorer: {" "}
+                        <a
+                          className="underline text-[var(--primary)] break-all"
+                          href={`https://explorer.stacks.co/txid/${resultId}?chain=${network}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          explorer.stacks.co/txid/{resultId}
+                        </a>
+                      </p>
+                    ) : null}
                   </CardContent>
                   <CardFooter className="flex justify-end gap-2">
                     <Button onClick={() => setOpen(false)} variant="ghost">Close</Button>

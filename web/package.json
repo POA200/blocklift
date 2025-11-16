@@ -12,13 +12,16 @@
     "db:seed": "node scripts/seed-metrics.js"
   },
   "dependencies": {
+    "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-slot": "^1.2.4",
     "@stacks/blockchain-api-client": "^8.13.4",
+    "@stacks/common": "^7.0.2",
     "@stacks/connect": "^8.2.2",
     "@stacks/network": "^7.2.0",
     "@stacks/transactions": "^7.3.0",
     "@tailwindcss/vite": "^4.1.17",
+    "@vercel/postgres": "^0.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
@@ -26,9 +29,8 @@
     "lucide-react": "^0.553.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-markdown": "^9.0.1",
-    "@vercel/postgres": "^0.10.0",
     "react-hook-form": "^7.66.0",
+    "react-markdown": "^9.0.1",
     "react-router-dom": "^7.9.5",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.17"

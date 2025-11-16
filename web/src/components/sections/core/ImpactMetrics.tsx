@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react"
-import { impactMetrics, fetchMetrics } from "@/lib/metrics"
+import { useEffect, useRef, useState } from "react"
+import { impactMetrics } from "@/lib/metrics"
 import { Users, DollarSign, Package, MapPin } from "lucide-react"
+import { useImpactMetrics } from "@/hooks/useImpactMetrics"
 
-function useCountUp(end: number, duration = 1200) {
+function useCountUp(end: number, duration = 1200, enabled = true) {
   const [value, setValue] = useState(0)
   useEffect(() => {
+    if (!enabled) {
+      setValue(0)
+      return
+    }
     if (typeof window === "undefined") return
     const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
     if (prefersReduced) {
@@ -21,7 +26,7 @@ function useCountUp(end: number, duration = 1200) {
     }
     const id = requestAnimationFrame(step)
     return () => cancelAnimationFrame(id)
-  }, [end, duration])
+  }, [end, duration, enabled])
   return value
 }
 
@@ -30,18 +35,35 @@ function formatNumber(n: number) {
 }
 
 export default function ImpactMetrics() {
-  const [metrics, setMetrics] = useState(() => impactMetrics)
+  const [metrics, setMetrics] = useState<any[]>(() => impactMetrics as any[])
+  const sectionRef = useRef<HTMLElement | null>(null)
+  const [inView, setInView] = useState(false)
+
+  const { metrics: liveMetrics } = useImpactMetrics()
 
   useEffect(() => {
-    let mounted = true
-    fetchMetrics().then((m) => {
-      if (mounted && Array.isArray(m)) setMetrics(m)
-    }).catch(() => {})
-    return () => { mounted = false }
+    setMetrics(liveMetrics as any[])
+  }, [liveMetrics])
+
+  // Trigger animation whenever the section enters/leaves viewport
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el || typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') {
+      // Fallback: if no IO, animate immediately
+      setInView(true)
+      return
+    }
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        setInView(entry.isIntersecting)
+      }
+    }, { threshold: 0.35, rootMargin: '0px 0px -10% 0px' })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [])
 
   return (
-    <section id="impact" tabIndex={-1} className="w-full bg-[var(--background)] text-[var(--foreground)] py-12 md:py-20">
+    <section ref={sectionRef} id="impact" tabIndex={-1} className="w-full bg-[var(--background)] text-[var(--foreground)] py-12 md:py-20">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center mb-6">
           <h2 className="text-2xl md:text-4xl font-extrabold">Impact Snapshot</h2>
@@ -51,7 +73,7 @@ export default function ImpactMetrics() {
         <div className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {metrics.map((m) => {
-              const current = useCountUp(m.value, 1300)
+              const current = useCountUp(m.value, 1300, inView)
               const Icon = m.key === "children_equipped" ? Users : m.key === "verified_donations" ? DollarSign : m.key === "nft_proofs" ? Package : MapPin
               return (
                 <div

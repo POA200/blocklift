@@ -10,25 +10,29 @@ const partners = [
 		name: "Let Africa Build (LAB)",
 		role: "Web3 Education Partner",
 		metric: "200 Students Reached",
-		xUrl: "https://x.com/LetAfricaBuild" // Placeholder – replace with official handle
+		xUrl: "https://x.com/LetAfricaBuild",
+		url: "https://letafricabuild.com"
 	},
 	{
 		name: "Flatearth Memecoin ($FLAT)",
 		role: "Memecoin Partner",
 		metric: "1M+ Tokens Donated",
-		xUrl: "https://x.com/FlatEarthDev" // Placeholder
+		xUrl: "https://x.com/FlatEarthDev",
+		url: "https://flatearthdev.xyz/"
 	},
 	{
 		name: "Boom Wallet",
 		role: "Bitcoin-native SocialFi. Marketplace, Chat & Community",
 		metric: "Major Supporter",
-		xUrl: "https://x.com/boom_wallet" // Placeholder
+		xUrl: "https://x.com/boom_wallet",
+		url: "https://boom.money"
 	},
 	{
 		name: "Local Ambassadors & Volunteers",
 		role: "Field Verification",
 		metric: "45 Active Ambassadors",
-		xUrl: "https://x.com/Blocklift_stx" // Generic project handle as placeholder
+		xUrl: null,
+		url: null
 	},
 ]
 
@@ -67,11 +71,16 @@ export default function Parteners() {
 								<p className="text-sm text-muted-foreground">{p.metric}</p>
 							</CardContent>
 
-							<CardFooter className="">
+							<CardFooter className="flex justify-between">
 								{p.xUrl ? (
 									<Button size="sm" variant="outline" onClick={() => window.open(p.xUrl, '_blank', 'noopener,noreferrer')}>View Partner</Button>
 								) : (
 									<Button size="sm" variant="outline" disabled>No X profile</Button>
+								)}
+								{p.url ? (
+									<Button className="cursor-pointer" size="sm" variant="default" onClick={() => window.open(p.url, '_blank', 'noopener,noreferrer')}>Visit Website</Button>
+								) : (
+									<Button size="sm" variant="outline" disabled>No website</Button>
 								)}
 							</CardFooter>
 						</Card>
