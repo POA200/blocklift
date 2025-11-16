@@ -10,7 +10,8 @@ const fallback = [
 ]
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600')
+  // Use standard uppercase directives and add max-age for browsers; allow edge revalidation.
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600')
 
   if (req.method === 'GET') {
     try {
@@ -22,10 +23,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (rows && rows.length) {
         return res.status(200).json({ metrics: rows })
       }
-      // Empty table -> return fallback
+      // Empty table -> attempt to create (idempotent) then fall back
+      try {
+        await sql`CREATE TABLE IF NOT EXISTS metrics (
+          key text PRIMARY KEY,
+          label text NOT NULL,
+          desc text NOT NULL,
+          value integer NOT NULL,
+          prefix text,
+          suffix text,
+          updated_at timestamptz DEFAULT now()
+        )`
+      } catch (_) {
+        // ignore create errors, still fallback
+      }
       return res.status(200).json({ metrics: fallback })
-    } catch (_) {
-      // If table doesn't exist or any other error, serve fallback
+    } catch (e) {
+      // On connection / query failure also fallback
       return res.status(200).json({ metrics: fallback })
     }
   }
