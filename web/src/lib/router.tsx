@@ -3,6 +3,7 @@ import Home from "@/pages/Home"
 import Dashboard from "@/pages/Dashboard"
 import Sponsor from "@/pages/Sponsor"
 import Education from "@/pages/Education"
+import Pay from "@/pages/Pay"
 // Volunteer import was failing; provide a small inline fallback component so the router compiles.
 // Note: keep imports light; pages below are simple components exported as default.
 const Volunteer: React.FC = () => <div>Volunteer page</div>
@@ -64,6 +65,8 @@ export default function Router() {
       return <Dashboard />
     case '/sponsor':
       return <Sponsor />
+    case '/pay':
+      return <Pay />
     case '/education':
       return <Education />
     case '/volunteer':
