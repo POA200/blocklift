@@ -1,7 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import FocusTrap from '@/components/ui/focus-trap'
 import { useForm } from "react-hook-form"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "../../ui/card"
 import { Button } from "../../ui/button"
 import { Input } from "../../ui/input"
 
@@ -9,7 +9,7 @@ type FormData = {
   id: string
 }
 
-const network = import.meta.env.VITE_NETWORK || 'testnet'
+const network = import.meta.env.VITE_NETWORK || 'mainnet'
 
 export const waitForTxConfirmed = async (txId: string, opts?: { timeoutMs?: number; intervalMs?: number }): Promise<void> => {
   console.log('waiting for tx to confirm → starting (poll-only)')
@@ -117,6 +117,17 @@ export default function VerificationInput() {
   const [lastTx, setLastTx] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      const original = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = original
+      }
+    }
+  }, [open])
 
   const rawValue = watch('id') || ''
   const trimmedValue = rawValue.trim()
@@ -255,16 +266,24 @@ export default function VerificationInput() {
         </Card>
 
         {open && (
-          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-background px-4">
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-transparent backdrop-blur-sm">
             <div className="max-w-lg w-full">
               <FocusTrap>
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-6">
-                  <h3 className="text-lg font-semibold mb-2">Verification Successful!</h3>
-                  <p className="mb-4 text-[var(--muted-foreground)]">Impact ID <span className="font-mono text-[var(--primary)]">{resultId}</span> is confirmed on the Stacks Blockchain.</p>
-                  <div className="flex justify-end gap-2">
+                <Card className="bg-background border border-primary">
+                  <CardHeader className="">
+                    <CardTitle className="text-lg text-green-600">Verification Successful!</CardTitle>
+                  </CardHeader>
+                  <CardDescription>
+                  </CardDescription>
+                  <CardContent className="pt-0 mb-4">
+                    <p className="text-foreground">Impact ID</p>
+                    <p className="font-mono text-primary break-all text-sm max-w-full">{resultId}</p>
+                    <p className="text-muted-foreground">is confirmed on the Stacks Blockchain.</p>
+                  </CardContent>
+                  <CardFooter className="flex justify-end gap-2">
                     <Button onClick={() => setOpen(false)} variant="ghost">Close</Button>
-                  </div>
-                </div>
+                  </CardFooter>
+                </Card>
               </FocusTrap>
             </div>
           </div>
