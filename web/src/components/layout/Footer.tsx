@@ -87,7 +87,7 @@ export default function Footer() {
                     <Link to="/#verify">NFT Proof</Link>
                   </li>
                   <li>
-                    <a href="https://github.com/POA200/blocklift" target="_blank" rel="noreferrer noopener">GitHub</a>
+                    <a href="https://t.co/M1USDTutu0" target="_blank" rel="noreferrer noopener">GitHub</a>
                   </li>
                 </ul>
             </div>
