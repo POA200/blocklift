@@ -9,12 +9,10 @@ import ImpactGallery from "../components/sections/core/ImpactGallery";
 import BottomCta from "../components/sections/core/BottomCta";
 import ImpactVideos from "@/components/sections/core/ImpactVideos";
 import EducationCta from "@/components/sections/core/EducationCta";
-import AdsBanner from "@/components/layout/AdsBanner";
 
 export default function Home() {
   return (
     <>
-      <AdsBanner />
       <Layout>
         <HeroSection />
         <ImpactMetrics />
