@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "../ui/button";
 import { X } from "lucide-react";
-import LeoImg from "@/assets/images/leo.jpg";
+//import LeoImg from "@/assets/images/leo.jpg";
 import LabImg from "@/assets/images/lab.jpg";
 import FlatImg from "@/assets/images/flat.jpg";
 import BoomImg from "@/assets/images/Boom.jpg";
@@ -16,16 +16,16 @@ export default function AdsBanner() {
 
   const items = useMemo(
     () => [
-      {
-        img: LeoImg,
-        alt: "$LEO coin",
-        title: "$LEO coin",
-        subtitle: "Leocoinstx",
-        cta: "Buy $Leo!",
-        href: "https://stxtools.io/tokens/SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token",
-        bgClass: "bg-gradient-to-r from-purple-500 via-pink-400 to-purple-600",
-        btnClass: "bg-purple-700 hover:bg-purple-800",
-      },
+      //{
+      //img: LeoImg,
+      //alt: "$LEO coin",
+      //title: "$LEO coin",
+      //subtitle: "Leocoinstx",
+      //cta: "Buy $Leo!",
+      //href: "https://stxtools.io/tokens/SP1AY6K3PQV5MRT6R4S671NWW2FRVPKM0BR162CT6.leo-token",
+      //bgClass: "bg-gradient-to-r from-purple-500 via-pink-400 to-purple-600",
+      //btnClass: "bg-purple-700 hover:bg-purple-800",
+      //},
       {
         img: LabImg,
         alt: "Let Africa Build",
