@@ -8,7 +8,6 @@ import FlatImg from "@/assets/images/flat.jpg";
 import BoomImg from "@/assets/images/Boom.jpg";
 
 export default function AdsBanner() {
-  // Rotating banner with dismiss control (session-scoped only)
   const [visible, setVisible] = useState(true);
   const [index, setIndex] = useState(0);
   const timer = useRef<number | null>(null);
