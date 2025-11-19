@@ -91,6 +91,10 @@ export default function Dashboard() {
 		<div>
 			<Seo
 				title="Impact-Chain Dashboard"
+				description="Live on-chain distributions, verified impact, and transaction feed powered by Stacks and secured by Bitcoin."
+			/>
+			<Seo
+				title="Impact-Chain Dashboard"
 				description="Live impact metrics and on-chain distributions tracked on Stacks."
 			/>
 			<SimpleHeader />

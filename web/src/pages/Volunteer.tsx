@@ -6,8 +6,8 @@ export default function Volunteer() {
   return (
     <div>
       <Seo
-        title="Volunteer & Ambassadors"
-        description="Join BlockLift as a field ambassador or volunteer to power verifiable education impact."
+        title="Volunteer / Ambassador"
+        description="Become a BlockLift volunteer or ambassador and help verify education impact on-chain."
       />
       <SimpleHeader />
       <main className="max-w-4xl mx-auto px-6 py-20">

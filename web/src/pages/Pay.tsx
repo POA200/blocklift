@@ -7,7 +7,7 @@ export default function Pay() {
 		<div>
 			<Seo
 				title="Payment"
-				description="Complete your BlockLift sponsorship payment securely."
+				description="Proceed to complete your BlockLift sponsorship via secure payment."
 			/>
 			<SimpleHeader />
 			<main className="max-w-4xl mx-auto px-6 py-20">

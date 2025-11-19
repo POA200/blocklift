@@ -6,9 +6,9 @@ export default function ImpactChain() {
 	return (
 		<div>
 			<Seo
-				title="Impact Chain"
-				description="Explore the BlockLift Impact-Chain: transparency and verification for education sponsorships."
-			/>
+        title="Impact Chain"
+        description="Trace education sponsorships with verifiable, on-chain records on the BlockLift Impact Chain."
+      />
 			<SimpleHeader />
 			<main className="max-w-6xl mx-auto px-6 py-20">
 				<h1 className="text-3xl font-bold mb-4">Impact Chain</h1>
