@@ -1,4 +1,3 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { sql } from '@vercel/postgres'
 
 // Fallback static metrics if DB is unavailable
@@ -9,7 +8,7 @@ const fallback = [
   { key: 'field_ambassadors', label: 'Field Ambassadors', desc: 'Local verifiers & volunteers deployed', value: 45 },
 ]
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   // Use standard uppercase directives and add max-age for browsers; allow edge revalidation.
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=600')
 
@@ -109,17 +108,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         `
         results.push({ key, created: true })
       } else {
-        const sets: any[] = []
-        if (label !== undefined) sets.push(sql`label = ${label}`)
-        if (desc !== undefined) sets.push(sql`desc = ${desc}`)
-        if (value !== undefined) sets.push(sql`value = ${value}`)
-        if (prefix !== undefined) sets.push(sql`prefix = ${prefix}`)
-        if (suffix !== undefined) sets.push(sql`suffix = ${suffix}`)
+        const labelProvided = label !== undefined
+        const descProvided = desc !== undefined
+        const valueProvided = value !== undefined
+        const prefixProvided = prefix !== undefined
+        const suffixProvided = suffix !== undefined
 
-        if (sets.length === 0) {
+        if (!labelProvided && !descProvided && !valueProvided && !prefixProvided && !suffixProvided) {
           results.push({ key, updated: false })
         } else {
-          await sql`UPDATE metrics SET ${sql.join(sets, sql`, `)}, updated_at = now() WHERE key = ${key}`
+          await sql`
+            UPDATE metrics
+            SET
+              label = CASE WHEN ${labelProvided} THEN ${label ?? null} ELSE label END,
+              desc = CASE WHEN ${descProvided} THEN ${desc ?? null} ELSE desc END,
+              value = CASE WHEN ${valueProvided} THEN ${value ?? null} ELSE value END,
+              prefix = CASE WHEN ${prefixProvided} THEN ${prefix ?? null} ELSE prefix END,
+              suffix = CASE WHEN ${suffixProvided} THEN ${suffix ?? null} ELSE suffix END,
+              updated_at = now()
+            WHERE key = ${key}
+          `
           results.push({ key, updated: true })
         }
       }
