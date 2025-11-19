@@ -1,10 +1,16 @@
 // React import not required with the new JSX transform, keep file simple
 import SimpleHeader from '../../components/simple-header'
 import SimpleFooter from '../../components/simple-footer'
+import Seo from '../../components/Seo'
 
 export default function PrivacyPolicy() {
   return (
     <div>
+      <Seo
+        title="Privacy Policy"
+        description="Read BlockLift's privacy policy regarding data handling and user privacy."
+        noindex={false}
+      />
       <SimpleHeader />
       <main className="mx-auto max-w-4xl p-6">
         <h1 className="text-2xl font-bold mb-4">Privacy Policy</h1>

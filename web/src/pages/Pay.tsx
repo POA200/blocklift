@@ -1,9 +1,14 @@
 import SimpleHeader from "@/components/simple-header"
 import Footer from "@/components/layout/Footer"
+import Seo from "@/components/Seo"
 
 export default function Pay() {
 	return (
 		<div>
+			<Seo
+				title="Payment"
+				description="Complete your BlockLift sponsorship payment securely."
+			/>
 			<SimpleHeader />
 			<main className="max-w-4xl mx-auto px-6 py-20">
 				<h1 className="text-3xl font-bold mb-4">Payment</h1>

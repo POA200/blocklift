@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { waitForTxConfirmed } from "@/components/sections/core/VerificationInput"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Users, DollarSign, Package, MapPin } from "lucide-react"
+import Seo from "@/components/Seo"
 
 export default function Dashboard() {
 	const [metrics, setMetrics] = useState<any[]>([])
@@ -88,6 +89,10 @@ export default function Dashboard() {
 
 	return (
 		<div>
+			<Seo
+				title="Impact-Chain Dashboard"
+				description="Live impact metrics and on-chain distributions tracked on Stacks."
+			/>
 			<SimpleHeader />
 			<main className="max-w-7xl mx-auto px-6 py-12">
 				<div className="flex items-end justify-between gap-4 mb-6">

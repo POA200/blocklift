@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Mail, Phone } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import Seo from '@/components/Seo'
 
 function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -59,6 +60,10 @@ export default function Contact() {
 
   return (
     <div>
+      <Seo
+        title="Contact"
+        description="Contact BlockLift for partnerships, sponsorships, or general inquiries."
+      />
       <SimpleHeader />
       <main className="max-w-6xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">

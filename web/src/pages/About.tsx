@@ -1,9 +1,14 @@
 import SimpleHeader from "@/components/simple-header"
 import SimpleFooter from "@/components/simple-footer"
+import Seo from "@/components/Seo"
 
 export default function About() {
   return (
     <div>
+      <Seo
+        title="About BlockLift"
+        description="Our mission is to lift communities with verifiable education sponsorships secured by Bitcoin."
+      />
       <SimpleHeader />
       <main className="max-w-4xl mx-auto px-6 py-20">
         <h1 className="text-3xl font-bold mb-4">About BlockLift</h1>

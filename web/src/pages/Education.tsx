@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import ReactMarkdown from 'react-markdown'
+import Seo from '@/components/Seo'
 
 // Import sample markdown content (Vite raw imports)
 import basicsLedgerMd from '@/content/education/basics/what-is-decentralized-ledger.md?raw'
@@ -73,6 +74,10 @@ export default function Education() {
 
   return (
     <div>
+      <Seo
+        title="Education Hub"
+        description="Curated resources on Bitcoin, Stacks, Clarity, and BlockLift technology. Learn, build, and verify on-chain impact."
+      />
       <SimpleHeader />
       <main className="max-w-7xl mx-auto px-6 py-16">
         {/* Section 1: Overview + Filters/Search */}

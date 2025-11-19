@@ -2,6 +2,7 @@ import  { useEffect, useMemo, useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import LogoSrc from "@/assets/images/BlockliftLogo.png"
 import { LAUNCH_TS } from "@/lib/launch"
+import Seo from "@/components/Seo"
 // Home component import removed (Countdown now navigates to Home route instead of rendering inline)
 
 type TimeLeft = {
@@ -49,6 +50,10 @@ export default function Countdown({ onFinish }: { onFinish?: () => void }) {
 
   return (
     <main className="min-h-screen w-full bg-[var(--background)] text-[var(--foreground)] flex items-center justify-center py-16 px-6 relative">
+      <Seo
+        title="Launching Soon"
+        description="BlockLift is launching soon. Verified education impact secured by Bitcoin."
+      />
       {/* Shortcut: navigate to Home */}
       <div className="fixed bottom-6 right-6 z-50">
         <button

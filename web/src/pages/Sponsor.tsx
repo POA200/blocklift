@@ -2,10 +2,15 @@ import SimpleHeader from "@/components/simple-header";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/lib/router";
+import Seo from "@/components/Seo";
 
 export default function Sponsor() {
   return (
     <div>
+      <Seo
+        title="Sponsor an Impact"
+        description="Sponsor verified education impact with transparent, on-chain proofs."
+      />
       <SimpleHeader />
       <main className="max-w-4xl mx-auto px-6 py-20">
         <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-6">
