@@ -1,202 +1,70 @@
-# React + TypeScript + Vite
+# 🚀 BLOCKLIFT
 
-## Metrics API (Vercel + Postgres)
+## 🌟 Project Overview
 
-This app exposes `/api/metrics` (Vercel Serverless Function) and reads from Vercel Postgres via `@vercel/postgres`.
+**BlockLift** is a blockchain-powered social impact initiative focused on connecting education and opportunity in underserved communities across Nigeria.
 
-Local options:
+Our core mission is to **"lift communities through education"** by providing essential school materials (bags, sandals, notebooks) to children in public schools. We solve the problem of trust and transparency in charitable giving by recording every single donation and delivery on the Bitcoin blockchain via **Stacks**.
 
-- Static fallback works out of the box.
-- To seed a Postgres database and serve real values:
+### Why BlockLift?
 
-```bash
-cd web
-npm install
-# Set POSTGRES_URL in .env.local (see .env.example)
-npm run db:seed
-npm run dev
-```
+- **Verifiable Impact:** Every donation generates an **NFT Proof of Impact** (a digital receipt) that donors can verify instantly on our public dashboard.
+- **Web3 Literacy:** We actively introduce students and communities to Web3, Bitcoin, and decentralized technology, fostering the next generation of innovators.
+- **Absolute Transparency:** We ensure 100% accountability by making all transactions and verification data publicly traceable on the chain.
 
-Deployment:
+[Image of simple blockchain transaction flow]
 
-- Deploy the `web` directory to Vercel. Add a Vercel Postgres database and link it to the project.
-- The function `/api/metrics` will use Postgres automatically via Vercel-provided env vars.
-- The frontend will attempt, in order: `VITE_METRICS_URL` (absolute), `window.__METRICS_URL__` (absolute), `/api/metrics` (prod), mock (dev opt-in), then static fallback.
+## 🎯 Core Focus Areas
 
-### Admin updates
+| Focus Area                 | Description                                                             |
+| :------------------------- | :---------------------------------------------------------------------- |
+| **Education Empowerment**  | Providing children with the physical tools needed to succeed in school. |
+| **Transparency in Giving** | Using the Stacks blockchain to record and verify every act of charity.  |
+| **Blockchain Awareness**   | Integrating Web3 education into school programs.                        |
+| **Community Engagement**   | Connecting trusted partners (NGOs and volunteers) directly with donors. |
 
-Securely update metrics via `POST /api/metrics` with a token.
+---
 
-1. Set `METRICS_ADMIN_TOKEN` in Vercel Project → Settings → Environment Variables (and in `.env.local` for local testing).
-2. Send updates:
+## 💻 Technical Stack (For Developers)
 
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $METRICS_ADMIN_TOKEN" \
-  https://<your-vercel-deployment>/api/metrics \
-  -d '{
-    "updates": [
-      {"key": "children_equipped", "value": 5200},
-      {"key": "verified_donations", "value": 13000, "prefix": "$"}
-    ]
-  }'
-```
+This project uses a modern, high-performance stack secured by Bitcoin.
 
-Notes:
+| Category             | Technology                                      | Purpose                                                                                             |
+| :------------------- | :---------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| **Blockchain Layer** | **Stacks** (Bitcoin L2) & **Clarity**           | Smart contract logic and Bitcoin security for verification.                                         |
+| **Frontend**         | **React** (Vite), **TypeScript**, **Shadcn UI** | High-speed user interface and type safety.                                                          |
+| **Styling**          | **Tailwind CSS**                                | Utility-first framework for responsive, custom design.                                              |
+| **Data & Storage**   | **PostgreSQL** (Future), **Hiro API**           | Database for non-blockchain data (ambassador applications) and fetching Stacks transaction history. |
 
-- Creating a new key requires `label`, `desc`, and `value`.
-- Updating an existing key accepts any subset of fields: `label`, `desc`, `value`, `prefix`, `suffix`.
+## 🚀 Getting Started (Running Locally)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+To set up the BlockLift website for development:
 
-Currently, two official plugins are available:
+1.  **Clone the Repository:**
+    ```bash
+    git clone [Your Repository URL]
+    cd blocklift-web
+    ```
+2.  **Install Dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Start the Frontend:**
+    ```bash
+    npm run dev
+    ```
+    The application will open on `http://localhost:5173`.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🤝 Collaborations
 
-## React Compiler
+BlockLift is supported by key leaders in the African and global crypto space:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Let Africa Build (LAB):** Africa's first Bitcoin development hub.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📈 Project Status
 
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
+The **Landing Page** and the **Impact-Chain Dashboard** are complete.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
-
-## On-Chain Metrics & Hiro / Stacks Integration
-
-### Why 400 Errors Appeared
-Requests in browser logs like:
-
-```
-
-https://api.mainnet.hiro.so/children-equipped
-https://api.mainnet.hiro.so/verified-donations
-
-````
-
-return 400 because those paths do not exist on Hiro. They originated from a previously committed, stale production bundle (`web/dist/`). The current source code instead:
-
-1. Uses `fetchCallReadOnlyFunction` (Stacks JS) to invoke read‑only Clarity functions.
-2. Falls back to the Vercel serverless function `/api/metrics` for DB + static values.
-
-Delete any committed build artifacts (`dist/`) so Vercel always rebuilds with the updated logic.
-
-### Correct Pattern For Read‑Only Contract Metrics
-Preferred (already used in hooks):
-
-```ts
-import { fetchCallReadOnlyFunction } from '@stacks/transactions'
-import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network'
-
-const network = import.meta.env.VITE_NETWORK === 'testnet' ? STACKS_TESTNET : STACKS_MAINNET
-const cv = await fetchCallReadOnlyFunction({
-  contractAddress: CONTRACT_ADDRESS,
-  contractName: CONTRACT_NAME,
-  functionName: 'get-children-equipped', // map from key
-  functionArgs: [],
-  network,
-  senderAddress: CONTRACT_ADDRESS,
-})
-````
-
-Manual HTTP alternative (not needed if using stacks.js):
-
-```
-POST https://stacks-node-api.<network>.stacks.co/v2/contracts/call-read/<address>/<contract>/<fn>
-Body: {"sender":"<address>","arguments":[]}
-```
-
-### Environment Variables (Vercel)
-
-| Name                    | Value / Notes                                   |
-| ----------------------- | ----------------------------------------------- |
-| `VITE_NETWORK`          | `mainnet` or `testnet`                          |
-| `VITE_CONTRACT_ADDRESS` | Deployed contract address for read‑only calls   |
-| `VITE_CONTRACT_NAME`    | Contract name containing metric functions       |
-| `VITE_METRICS_URL`      | Optional absolute override for metrics endpoint |
-| `METRICS_ADMIN_TOKEN`   | Bearer token for POST /api/metrics updates      |
-
-Optional: `POSTGRES_URL` (auto from Vercel Postgres binding).
-
-### Metrics Resolution Order (Frontend)
-
-1. Absolute `VITE_METRICS_URL`
-2. `window.__METRICS_URL__` (if set before hydration)
-3. `/api/metrics` in production
-4. Local mock (`VITE_USE_MOCK=1`) during dev
-5. Static fallback array
-
-### Caching
-
-`/api/metrics` sets `Cache-Control: s-maxage=300, stale-while-revalidate=600` for edge caching. On‑chain reads bypass this and are always fresh at page load.
-
-### Troubleshooting
-
-- 400/404 on Hiro: ensure you call valid endpoints (`/extended/v1/tx/<txid>` etc.) or use stacks.js helpers.
-- Empty metrics: DB not seeded yet; fallback used.
-- Read‑only call failure: verify contract address/name and function exists (naming `get-<key>` pattern unless overridden).
-
-### Avoid Committing `dist/`
-
-`dist/` is in `.gitignore`. If it becomes tracked, remove it (`git rm -r --cached web/dist`) and commit. Stale bundles can retain old API calls and produce misleading 400 errors after deploy.
-
-```
-
-```
+- **Next Phase:** Development of the **Payment Integration** (Paystack/Boom Wallet) and the **Ambassador Sign-up** server logic.
