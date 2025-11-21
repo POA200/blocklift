@@ -10,25 +10,21 @@ interface ImpactVideoItem {
   description: string;
 }
 
-// Playlist of impact-related YouTube videos.
 const IMPACT_VIDEOS: ImpactVideoItem[] = [
   {
-    id: "Oe421EPjeBE", // Example: Blockchain / crypto explainer
-    title: "Verifiable Impact Overview",
-    description:
-      "Introduction to how on-chain proofs enhance transparency for aid logistics.",
+    id: "YYnjpE4q2f4",
+    title: "Hope, Bag and Blockchain",
+    description: "The Blocklift Story Begins!",
   },
   {
-    id: "dQw4w9WgXcQ", // Placeholder popular video ID
-    title: "Field Verification Walkthrough",
-    description:
-      "Step-by-step demonstration of validating deliveries with cryptographic attestations.",
+    id: "YYnjpE4q2f4",
+    title: "Hope, Bag and Blockchain",
+    description: "The Blocklift Story Begins!",
   },
   {
-    id: "9bZkp7q19f0", // Placeholder second sample
-    title: "Community Education Session",
-    description:
-      "Empowering local ambassadors with tools for transparent reporting and auditing.",
+    id: "YYnjpE4q2f4",
+    title: "Hope, Bag and Blockchain",
+    description: "The Blocklift Story Begins!",
   },
 ];
 
@@ -53,7 +49,7 @@ export default function ImpactVideos() {
       <div className="max-w-5xl mx-auto px-6 flex flex-col gap-8">
         <header className="text-center space-y-3">
           <h2 className="text-2xl md:text-4xl font-semibold text-foreground">
-            Impact Video Playlist
+            Blocklift Video Playlist
           </h2>
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
             Browse short clips showcasing transparent verification, field
@@ -98,7 +94,7 @@ export default function ImpactVideos() {
             <div className="flex items-center justify-between gap-4">
               <Button
                 variant="outline"
-                className="text-primary border-primary"
+                className="text-primary border-primary cursor-pointer"
                 onClick={handlePrev}
                 aria-label="Previous video"
               >
@@ -106,8 +102,8 @@ export default function ImpactVideos() {
                 Previous
               </Button>
               <Button
-                variant="secondary"
-                className="text-primary"
+                variant="outline"
+                className="text-primary cursor-pointer"
                 onClick={handleNext}
                 aria-label="Next video"
               >
