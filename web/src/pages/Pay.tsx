@@ -306,7 +306,7 @@ export default function Pay() {
                   </Button>
                   {!paystackReady && (
                     <span className="text-xs text-destructive">
-                      Missing PAYSTACK public key env var.
+                      Unable to load payment gateway. Please try again later.
                     </span>
                   )}
                 </div>
