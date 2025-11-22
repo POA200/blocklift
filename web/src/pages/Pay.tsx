@@ -5,6 +5,8 @@ import Seo from "@/components/Seo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { navigate } from "@/lib/router";
 
 // Constants
 const PAYSTACK_PUBLIC_KEY: string | undefined = (import.meta as any).env
@@ -186,6 +188,26 @@ export default function Pay() {
       />
       <SimpleHeader />
       <main className="max-w-5xl mx-auto px-6 py-16 space-y-10">
+        {/* Return Button */}
+        <div className="max-w-3xl mx-auto -mt-6 mb-10 text-left">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (typeof window === "undefined") return;
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigate("/");
+              }
+            }}
+            aria-label="Return to previous page"
+            className="inline-flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+        </div>
         <header className="space-y-3 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-primary">
             Support BlockLift

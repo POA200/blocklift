@@ -14,8 +14,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Users, DollarSign, Package, MapPin } from "lucide-react";
+import { Users, DollarSign, Package, MapPin, ArrowLeft } from "lucide-react";
 import Seo from "@/components/Seo";
+import { navigate } from "@/lib/router";
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<any[]>([]);
@@ -115,6 +116,26 @@ export default function Dashboard() {
       />
       <SimpleHeader />
       <main className="max-w-7xl mx-auto px-6 py-12">
+        {/* Return Button */}
+        <div className="-mt-2 mb-4 text-left">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (typeof window === "undefined") return;
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                navigate("/");
+              }
+            }}
+            aria-label="Return to previous page"
+            className="inline-flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Go Back to Homepage
+          </Button>
+        </div>
         <div className="flex items-end justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-semibold">
