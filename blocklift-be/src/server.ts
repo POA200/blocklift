@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import ambassadorRouter from './routes/ambassador';
+import paymentsRouter from './routes/payments';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.get('/api/health', (req, res) => {
 
 // Ambassador routes
 app.use('/api/ambassador', ambassadorRouter);
+app.use('/api/payments', paymentsRouter);
 
 // Not found handler
 app.use((req: Request, res: Response) => {

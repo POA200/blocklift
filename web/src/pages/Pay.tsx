@@ -9,10 +9,7 @@ import { Button } from "@/components/ui/button";
 // Constants
 const PAYSTACK_PUBLIC_KEY: string | undefined = (import.meta as any).env
   .VITE_PAYSTACK_PUBLIC_KEY;
-const PAYMENT_TIERS: Record<"NGN" | "USD", number[]> = {
-  NGN: [5000, 10000, 50000],
-  USD: [10, 25, 50],
-};
+const PAYMENT_TIERS: number[] = [5000, 10000, 50000];
 
 interface TierCardProps {
   tier: number;
@@ -102,10 +99,7 @@ function TabsContent({
 
 export default function Pay() {
   const [activeTab, setActiveTab] = useState("fiat");
-  const [selectedCurrency, setSelectedCurrency] = useState<"NGN" | "USD">(
-    "NGN"
-  );
-  const [amountMinor, setAmountMinor] = useState(0); // kobo or cents
+  const [amountMinor, setAmountMinor] = useState(0); // kobo
   const [donorEmail, setDonorEmail] = useState("");
   const [donorName, setDonorName] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<
@@ -116,7 +110,7 @@ export default function Pay() {
 
   const paystackReady = Boolean(PAYSTACK_PUBLIC_KEY);
   const selectedTierAmount = amountMinor > 0 ? amountMinor / 100 : 0;
-  const currencySymbol = selectedCurrency === "NGN" ? "₦" : "$";
+  const currencySymbol = "₦";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -137,12 +131,7 @@ export default function Pay() {
     setCustomAmountDisplay(String(tier));
     setAmountMinor(tier * 100);
   };
-  const handleCurrencyChange = (c: "NGN" | "USD") => {
-    setSelectedCurrency(c);
-    setAmountMinor(0);
-    setCustomAmountDisplay("");
-    setPaymentStatus("idle");
-  };
+  // Removed currency switching (NGN only)
   const handlePaystackCheckout = () => {
     if (!paystackReady || !donorEmail || !donorName || amountMinor < 100)
       return;
@@ -151,7 +140,7 @@ export default function Pay() {
       key: PAYSTACK_PUBLIC_KEY,
       email: donorEmail,
       amount: amountMinor,
-      currency: selectedCurrency,
+      currency: "NGN",
       ref: reference,
       metadata: {
         custom_fields: [
@@ -166,7 +155,19 @@ export default function Pay() {
         const refValue = response?.reference || reference;
         setFinalReference(refValue);
         setPaymentStatus("processing");
-        setTimeout(() => setPaymentStatus("success"), 1200);
+        // Record payment asynchronously
+        fetch("http://localhost:3000/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reference: refValue,
+            amountMinor,
+            donorName,
+            donorEmail,
+          }),
+        })
+          .catch(() => {})
+          .finally(() => setTimeout(() => setPaymentStatus("success"), 1200));
       },
       onClose: () => {
         setPaymentStatus("idle");
@@ -186,10 +187,10 @@ export default function Pay() {
       <SimpleHeader />
       <main className="max-w-5xl mx-auto px-6 py-16 space-y-10">
         <header className="space-y-3 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+          <h1 className="text-3xl md:text-4xl font-bold text-primary">
             Support BlockLift
           </h1>
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm md:text-base text-foreground max-w-2xl mx-auto">
             Choose a donation tier or enter a custom amount. Your transaction
             reference helps us create verifiable on-chain impact records.
           </p>
@@ -212,36 +213,9 @@ export default function Pay() {
           <TabsContent active={activeTab === "fiat"}>
             <div className="grid gap-10">
               <section className="space-y-4">
-                <div className="flex flex-wrap gap-3 items-center">
-                  <span className="text-sm font-medium text-foreground">
-                    Currency:
-                  </span>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant={
-                        selectedCurrency === "NGN" ? "default" : "outline"
-                      }
-                      onClick={() => handleCurrencyChange("NGN")}
-                      className="px-4"
-                    >
-                      ₦ NGN
-                    </Button>
-                    <Button
-                      type="button"
-                      variant={
-                        selectedCurrency === "USD" ? "default" : "outline"
-                      }
-                      onClick={() => handleCurrencyChange("USD")}
-                      className="px-4"
-                    >
-                      $ USD
-                    </Button>
-                  </div>
-                </div>
                 <h2 className="text-xl font-semibold">Select a Tier</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {PAYMENT_TIERS[selectedCurrency].map((tier) => (
+                  {PAYMENT_TIERS.map((tier) => (
                     <TierCard
                       key={tier}
                       tier={tier}
@@ -253,18 +227,17 @@ export default function Pay() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">
-                    Custom Amount ({selectedCurrency})
+                    Custom Amount (NGN)
                   </label>
                   <Input
                     type="number"
-                    min={selectedCurrency === "NGN" ? 100 : 1}
-                    placeholder={`Enter amount in ${selectedCurrency}`}
+                    min={100}
+                    placeholder="Enter amount in NGN"
                     value={customAmountDisplay}
                     onChange={(e) => handleCustomAmountChange(e.target.value)}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Stored internally as {amountMinor}{" "}
-                    {selectedCurrency === "NGN" ? "kobo" : "cents"}.
+                    Stored internally as {amountMinor} kobo.
                   </p>
                 </div>
               </section>
@@ -400,7 +373,7 @@ export default function Pay() {
                   impact. Stay tuned.
                 </p>
                 <Button variant="outline" disabled>
-                  STX Payment Disabled
+                  STX Payment Unavailable
                 </Button>
               </CardContent>
             </Card>
