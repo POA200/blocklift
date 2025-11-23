@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { Users, DollarSign, Package, MapPin, ArrowLeft } from "lucide-react";
 import Seo from "@/components/Seo";
+import { CONTRACT_ADDRESS } from "@/lib/constants";
 import { navigate } from "@/lib/router";
 
 export default function Dashboard() {
@@ -133,7 +134,7 @@ export default function Dashboard() {
             className="inline-flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Go Back to Homepage
+            Go Back
           </Button>
         </div>
         <div className="flex items-end justify-between gap-4 mb-6">
@@ -267,129 +268,138 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Transactions Feed */}
-        <div className="mb-3 flex items-center gap-2">
-          <span className="text-sm text-[var(--muted-foreground)]">
-            Latest Blockchain Distributions
-          </span>
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              size="sm"
-              variant={txFilter === "all" ? "default" : "ghost"}
-              onClick={() => setTxFilter("all")}
-            >
-              All
-            </Button>
-            <Button
-              size="sm"
-              variant={txFilter === "success" ? "default" : "ghost"}
-              onClick={() => setTxFilter("success")}
-            >
-              Verified
-            </Button>
-            <Button
-              size="sm"
-              variant={txFilter === "pending" ? "default" : "ghost"}
-              onClick={() => setTxFilter("pending")}
-            >
-              Pending
-            </Button>
-          </div>
-        </div>
+        {CONTRACT_ADDRESS ? (
+          <>
+            {/* Transactions Feed */}
+            <div className="mb-3 flex items-center gap-2">
+              <span className="text-sm text-[var(--muted-foreground)]">
+                Latest Blockchain Distributions
+              </span>
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant={txFilter === "all" ? "default" : "ghost"}
+                  onClick={() => setTxFilter("all")}
+                >
+                  All
+                </Button>
+                <Button
+                  size="sm"
+                  variant={txFilter === "success" ? "default" : "ghost"}
+                  onClick={() => setTxFilter("success")}
+                >
+                  Verified
+                </Button>
+                <Button
+                  size="sm"
+                  variant={txFilter === "pending" ? "default" : "ghost"}
+                  onClick={() => setTxFilter("pending")}
+                >
+                  Pending
+                </Button>
+              </div>
+            </div>
 
-        <div className="space-y-3">
-          {txLoading ? (
-            <Card className="bg-[var(--surface)] border border-[var(--border)]">
-              <CardContent className="py-6">Loading…</CardContent>
-            </Card>
-          ) : visibleTxs.length === 0 ? (
-            <Card className="bg-[var(--surface)] border border-[var(--border)]">
-              <CardContent className="py-6">
-                No recent distributions.
-              </CardContent>
-            </Card>
-          ) : (
-            <Accordion type="single" collapsible>
-              {visibleTxs.map((tx: any) => {
-                const network =
-                  (import.meta.env.VITE_NETWORK as string | undefined) ||
-                  "mainnet";
-                const href = `https://explorer.stacks.co/txid/${tx.tx_id}?chain=${network}`;
-                const school =
-                  tx.contract_call?.function_name?.replace(/[-_]/g, " ") ||
-                  "Distribution";
-                const status = tx.tx_status;
-                const badge =
-                  status === "success" ? (
-                    <Badge className="bg-emerald-600 hover:bg-emerald-600/90">
-                      Verified
-                    </Badge>
-                  ) : status === "pending" ? (
-                    <Badge className="bg-orange-500 hover:bg-orange-500/90">
-                      Pending
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary">{status}</Badge>
-                  );
-                return (
-                  <Card
-                    key={tx.tx_id}
-                    className="bg-[var(--surface)] border border-[var(--border)]"
-                  >
-                    <AccordionItem value={tx.tx_id}>
-                      <AccordionTrigger className="px-4">
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="font-medium flex-1 text-left">
-                            {school}
-                          </div>
-                          <div className="text-sm text-[var(--muted-foreground)] mr-2">
-                            {new Date(
-                              tx.burn_block_time * 1000
-                            ).toLocaleString?.() || ""}
-                          </div>
-                          {badge}
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <CardContent className="pt-0 px-4 pb-4">
-                          <div className="text-sm mb-2 text-[var(--muted-foreground)]">
-                            Function:{" "}
-                            <span className="text-[var(--foreground)] font-mono">
-                              {tx.contract_call?.function_name}
-                            </span>
-                          </div>
-                          <div className="text-sm mb-3 break-all">
-                            Tx:{" "}
-                            <a
-                              className="text-[var(--primary)] underline"
-                              href={href}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              {tx.tx_id}
-                            </a>
-                          </div>
-                          <div className="text-xs text-[var(--muted-foreground)]">
-                            Args:{" "}
-                            <span className="font-mono break-all">
-                              {JSON.stringify(
-                                tx.contract_call?.function_args?.map(
-                                  (a: any) => a?.repr ?? a
-                                ),
-                                null,
-                                0
-                              )}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Card>
-                );
-              })}
-            </Accordion>
-          )}
-        </div>
+            <div className="space-y-3">
+              {txLoading ? (
+                <Card className="bg-[var(--surface)] border border-[var(--border)]">
+                  <CardContent className="py-6">Loading…</CardContent>
+                </Card>
+              ) : visibleTxs.length === 0 ? (
+                <Card className="bg-[var(--surface)] border border-[var(--border)]">
+                  <CardContent className="py-6">
+                    No recent distributions.
+                  </CardContent>
+                </Card>
+              ) : (
+                <Accordion type="single" collapsible>
+                  {visibleTxs.map((tx: any) => {
+                    const network =
+                      (import.meta.env.VITE_NETWORK as string | undefined) ||
+                      "mainnet";
+                    const href = `https://explorer.stacks.co/txid/${tx.tx_id}?chain=${network}`;
+                    const school =
+                      tx.contract_call?.function_name?.replace(/[-_]/g, " ") ||
+                      "Distribution";
+                    const status = tx.tx_status;
+                    const badge =
+                      status === "success" ? (
+                        <Badge className="bg-emerald-600 hover:bg-emerald-600/90">
+                          Verified
+                        </Badge>
+                      ) : status === "pending" ? (
+                        <Badge className="bg-orange-500 hover:bg-orange-500/90">
+                          Pending
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">{status}</Badge>
+                      );
+                    return (
+                      <Card
+                        key={tx.tx_id}
+                        className="bg-[var(--surface)] border border-[var(--border)]"
+                      >
+                        <AccordionItem value={tx.tx_id}>
+                          <AccordionTrigger className="px-4">
+                            <div className="flex items-center gap-3 w-full">
+                              <div className="font-medium flex-1 text-left">
+                                {school}
+                              </div>
+                              <div className="text-sm text-[var(--muted-foreground)] mr-2">
+                                {new Date(
+                                  tx.burn_block_time * 1000
+                                ).toLocaleString?.() || ""}
+                              </div>
+                              {badge}
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <CardContent className="pt-0 px-4 pb-4">
+                              <div className="text-sm mb-2 text-[var(--muted-foreground)]">
+                                Function:{" "}
+                                <span className="text-[var(--foreground)] font-mono">
+                                  {tx.contract_call?.function_name}
+                                </span>
+                              </div>
+                              <div className="text-sm mb-3 break-all">
+                                Tx:{" "}
+                                <a
+                                  className="text-[var(--primary)] underline"
+                                  href={href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  {tx.tx_id}
+                                </a>
+                              </div>
+                              <div className="text-xs text-[var(--muted-foreground)]">
+                                Args:{" "}
+                                <span className="font-mono break-all">
+                                  {JSON.stringify(
+                                    tx.contract_call?.function_args?.map(
+                                      (a: any) => a?.repr ?? a
+                                    ),
+                                    null,
+                                    0
+                                  )}
+                                </span>
+                              </div>
+                            </CardContent>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Card>
+                    );
+                  })}
+                </Accordion>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="mt-8 text-center text-xs text-[var(--muted-foreground)]">
+            Configure contract address & name to view live on-chain
+            distributions.
+          </div>
+        )}
       </main>
       <SimpleFooter />
     </div>

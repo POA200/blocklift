@@ -49,7 +49,17 @@ export function useImpactMetrics() {
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
-  const hasContract = useMemo(() => Boolean(CONTRACT_ADDRESS && CONTRACT_NAME), [])
+  // Treat obviously placeholder addresses or names as "not configured"
+  const hasContract = useMemo(() => {
+    const addr = CONTRACT_ADDRESS?.trim() || ''
+    const name = CONTRACT_NAME?.trim() || ''
+    if (!addr || !name) return false
+    // basic heuristic: Stacks mainnet address starts with 'SP' or 'SM' and length > 20
+    if (!/^S[P,M]/.test(addr) || addr.length < 20 || /X{4,}/i.test(addr)) return false
+    // placeholder detection in name
+    if (/impact-metrics/i.test(name) && /XXXXXXXX/.test(addr)) return false
+    return true
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -58,7 +68,7 @@ export function useImpactMetrics() {
       setLoading(true)
       setError(null)
 
-      // Fallback: if no contract configured, keep API behavior
+      // Fallback: if no valid contract configured, keep API behavior (no on-chain reads)
       if (!hasContract) {
         try {
           const api = await fetchMetrics()

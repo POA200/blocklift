@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Lock, Package, MapPin, ArrowLeft } from "lucide-react";
 import SimpleHeader from "@/components/simple-header";
 import SimpleFooter from "@/components/simple-footer";
+import BlockliftLogo from "@/assets/images/BlockliftLogo.png";
 
 export default function Sponsor() {
   const navigate = useNavigate();
@@ -36,10 +37,21 @@ export default function Sponsor() {
           </div>
           {/* Hero */}
           <section className="max-w-3xl mx-auto text-center mb-16">
+            <div className="flex justify-center mb-8">
+              <img
+                src={BlockliftLogo}
+                alt="BlockLift logo"
+                className="h-24 w-auto drop-shadow-sm select-none"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <h1 className="text-2xl md:text-4xl font-medium">
+              Verifiable Impact!
+            </h1>
             <h1 className="text-2xl md:text-4xl font-medium mb-6">
-              Verifiable Impact.{" "}
-              <span className="text-primary">Zero Doubt. </span>Secure Your
-              Legacy on the<span className="text-primary"> Bitcoin L2.</span>
+              Secure Your Legacy on the
+              <span className="text-primary"> Bitcoin L2.</span>
             </h1>
             <p className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed">
               BlockLift guarantees that every penny funds essential school
@@ -52,7 +64,7 @@ export default function Sponsor() {
               size={"lg"}
               aria-label="Sponsor impact now"
             >
-              Sponsor An Impact Now →
+              Sponsor An Impact Today →
             </Button>
           </section>
 
