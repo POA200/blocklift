@@ -32,7 +32,7 @@ export default function AdsBanner() {
         subtitle: "Web3 Education Partner",
         cta: "Visit",
         href: "https://letafricabuild.com",
-        bgClass: "bg-gradient-to-r from-yellow-500 via-orange-500 to-black-600",
+        bgClass: "bg-gradient-to-r from-yellow-500 via-orange-500 to-black",
         btnClass: "bg-yellow-600 hover:bg-yellow-700",
       },
       {
