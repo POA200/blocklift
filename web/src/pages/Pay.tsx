@@ -174,10 +174,43 @@ export default function Pay() {
 
   const paystackReady = Boolean(PAYSTACK_PUBLIC_KEY);
   const selectedTierAmount = amountMinor > 0 ? amountMinor / 100 : 0; // NGN
-  // Placeholder FX conversion: USD approximation (NGN -> USD) dividing by 1000.
-  const usdAmount =
-    selectedTierAmount > 0 ? Number((selectedTierAmount / 1000).toFixed(2)) : 0;
+  // Live NGN -> USD FX rate state
+  const [fxRate, setFxRate] = useState<number | null>(null);
+  const [fxLoading, setFxLoading] = useState(false);
+  const [fxError, setFxError] = useState<string | null>(null);
+  // Compute USD amount when rate available
+  const usdAmount = fxRate && selectedTierAmount > 0 ? Number((selectedTierAmount * fxRate).toFixed(2)) : 0;
   const currencySymbol = "₦";
+
+  // Fetch conversion rate when PayPal tab becomes active and rate not yet loaded
+  useEffect(() => {
+    if (activeTab !== 'paypal') return;
+    if (fxRate !== null) return; // already loaded or attempted
+    let cancelled = false;
+    const loadFx = async () => {
+      setFxLoading(true);
+      setFxError(null);
+      try {
+        const apiUrl = (import.meta as any).env?.VITE_FX_NGN_USD_URL || 'https://api.exchangerate.host/latest?base=NGN&symbols=USD';
+        const res = await fetch(apiUrl);
+        if (!res.ok) throw new Error(`FX status ${res.status}`);
+        const json = await res.json();
+        const rate = typeof json?.rates?.USD === 'number' ? json.rates.USD : (typeof json?.USD === 'number' ? json.USD : null);
+        if (rate == null) throw new Error('USD rate missing');
+        if (!cancelled) setFxRate(rate);
+      } catch (e: any) {
+        const fallback = Number((import.meta as any).env?.VITE_FX_FALLBACK_RATE || 0.001);
+        if (!cancelled) {
+          setFxError(e?.message || 'Failed to load FX');
+          setFxRate(fallback); // fallback rate
+        }
+      } finally {
+        if (!cancelled) setFxLoading(false);
+      }
+    };
+    loadFx();
+    return () => { cancelled = true; };
+  }, [activeTab, fxRate]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -482,18 +515,23 @@ export default function Pay() {
             <TabsContent active={activeTab === "paypal"}>
               <div className="space-y-8">
                 <section className="space-y-4 text-center">
-                  <h2 className="text-xl font-semibold">
-                    Donate via PayPal (USD)
-                  </h2>
+                  <h2 className="text-xl font-semibold">Donate via PayPal (USD)</h2>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    The amount below converts your selected NGN tier to an
-                    approximate USD value (prototype rate). Final audited NGN
-                    value will still be recorded off-chain for now.
+                    {fxLoading && 'Loading live FX rate…'}
+                    {!fxLoading && fxRate && !fxError && (
+                      <>Live conversion (₦1 = ${fxRate.toFixed(4)} USD).</>
+                    )}
+                    {!fxLoading && fxError && (
+                      <>FX error: {fxError}. Using fallback rate {fxRate?.toFixed(4)}.</>
+                    )}
+                    {' '}Final audited NGN amount is stored internally.
                   </p>
                   <div className="text-2xl font-bold">
                     {usdAmount > 0
                       ? `$${usdAmount.toLocaleString()}`
-                      : "Select or enter an NGN amount first"}
+                      : selectedTierAmount > 0 && fxLoading
+                      ? 'Fetching rate…'
+                      : 'Select or enter an NGN amount first'}
                   </div>
                 </section>
                 <section className="flex justify-center">
