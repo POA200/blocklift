@@ -179,29 +179,41 @@ export default function Pay() {
   const [fxLoading, setFxLoading] = useState(false);
   const [fxError, setFxError] = useState<string | null>(null);
   // Compute USD amount when rate available
-  const usdAmount = fxRate && selectedTierAmount > 0 ? Number((selectedTierAmount * fxRate).toFixed(2)) : 0;
+  const usdAmount =
+    fxRate && selectedTierAmount > 0
+      ? Number((selectedTierAmount * fxRate).toFixed(2))
+      : 0;
   const currencySymbol = "₦";
 
   // Fetch conversion rate when PayPal tab becomes active and rate not yet loaded
   useEffect(() => {
-    if (activeTab !== 'paypal') return;
+    if (activeTab !== "paypal") return;
     if (fxRate !== null) return; // already loaded or attempted
     let cancelled = false;
     const loadFx = async () => {
       setFxLoading(true);
       setFxError(null);
       try {
-        const apiUrl = (import.meta as any).env?.VITE_FX_NGN_USD_URL || 'https://api.exchangerate.host/latest?base=NGN&symbols=USD';
+        const apiUrl =
+          (import.meta as any).env?.VITE_FX_NGN_USD_URL ||
+          "https://api.exchangerate.host/latest?base=NGN&symbols=USD";
         const res = await fetch(apiUrl);
         if (!res.ok) throw new Error(`FX status ${res.status}`);
         const json = await res.json();
-        const rate = typeof json?.rates?.USD === 'number' ? json.rates.USD : (typeof json?.USD === 'number' ? json.USD : null);
-        if (rate == null) throw new Error('USD rate missing');
+        const rate =
+          typeof json?.rates?.USD === "number"
+            ? json.rates.USD
+            : typeof json?.USD === "number"
+            ? json.USD
+            : null;
+        if (rate == null) throw new Error("USD rate missing");
         if (!cancelled) setFxRate(rate);
       } catch (e: any) {
-        const fallback = Number((import.meta as any).env?.VITE_FX_FALLBACK_RATE || 0.001);
+        const fallback = Number(
+          (import.meta as any).env?.VITE_FX_FALLBACK_RATE || 0.001
+        );
         if (!cancelled) {
-          setFxError(e?.message || 'Failed to load FX');
+          setFxError(e?.message || "Failed to load FX");
           setFxRate(fallback); // fallback rate
         }
       } finally {
@@ -209,7 +221,9 @@ export default function Pay() {
       }
     };
     loadFx();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [activeTab, fxRate]);
 
   useEffect(() => {
@@ -515,23 +529,28 @@ export default function Pay() {
             <TabsContent active={activeTab === "paypal"}>
               <div className="space-y-8">
                 <section className="space-y-4 text-center">
-                  <h2 className="text-xl font-semibold">Donate via PayPal (USD)</h2>
+                  <h2 className="text-xl font-semibold">
+                    Donate via PayPal (USD)
+                  </h2>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    {fxLoading && 'Loading live FX rate…'}
+                    {fxLoading && "Loading live FX rate…"}
                     {!fxLoading && fxRate && !fxError && (
                       <>Live conversion (₦1 = ${fxRate.toFixed(4)} USD).</>
                     )}
                     {!fxLoading && fxError && (
-                      <>FX error: {fxError}. Using fallback rate {fxRate?.toFixed(4)}.</>
-                    )}
-                    {' '}Final audited NGN amount is stored internally.
+                      <>
+                        FX error: {fxError}. Using fallback rate{" "}
+                        {fxRate?.toFixed(4)}.
+                      </>
+                    )}{" "}
+                    Final audited NGN amount is stored internally.
                   </p>
                   <div className="text-2xl font-bold">
                     {usdAmount > 0
                       ? `$${usdAmount.toLocaleString()}`
                       : selectedTierAmount > 0 && fxLoading
-                      ? 'Fetching rate…'
-                      : 'Select or enter an NGN amount first'}
+                      ? "Fetching rate…"
+                      : "Select or enter an NGN amount first"}
                   </div>
                 </section>
                 <section className="flex justify-center">

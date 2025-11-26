@@ -45,16 +45,17 @@ const GalleryItem = ({ item }: { item: (typeof galleryItems)[0] }) => {
         className="absolute inset-0 w-full h-full object-cover"
         loading={item.priority ? "eager" : "lazy"}
       />
-      <div aria-hidden="true" className="absolute inset-0 bg-black/50" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"
+      />
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"
       />
       <div className="relative z-10 flex flex-col justify-end h-full p-6">
-        <h3 className="text-lg font-semibold text-foreground mb-1">
-          {item.title}
-        </h3>
-        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+        <h3 className="text-lg font-semibold text-white mb-1">{item.title}</h3>
+        <p className="text-sm text-white mt-2 leading-relaxed">
           {item.description}
         </p>
       </div>
