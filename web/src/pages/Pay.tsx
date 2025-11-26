@@ -12,7 +12,8 @@ import { navigate } from "@/lib/router";
 // Constants
 const PAYSTACK_PUBLIC_KEY: string | undefined = (import.meta as any).env
   .VITE_PAYSTACK_PUBLIC_KEY;
-const PAYMENT_TIERS: number[] = [5000, 10000, 50000];
+const PAYMENT_TIERS: number[] = [5000, 10000, 50000]; // NGN tiers
+const PAYPAL_TIERS: number[] = [5, 10, 50]; // USD tiers
 const PAYPAL_CURRENCY = "USD";
 const PAYPAL_CLIENT_ID: string | undefined = (import.meta as any).env
   ?.VITE_PAYPAL_CLIENT_ID;
@@ -41,20 +42,28 @@ function PayPalButtonComponent({
         }}
         disabled={disabled || amountUsd <= 0}
         forceReRender={[amountUsd]}
-        createOrder={(_data, _actions) => {
-          // NOTE: Normally you'd call your backend to create the order and return orderID.
-          // This is a mocked order id for MVP / frontend-only prototype.
-          const mockOrderId = `MOCK-PAYPAL-${Date.now()}`;
-          return Promise.resolve(mockOrderId);
+        createOrder={async (_data, actions) => {
+          // Create PayPal order with the specified amount
+          return actions.order.create({
+            purchase_units: [
+              {
+                amount: {
+                  currency_code: PAYPAL_CURRENCY,
+                  value: amountUsd.toFixed(2),
+                },
+                description: "BlockLift Impact Donation",
+              },
+            ],
+            intent: "CAPTURE",
+          });
         }}
-        onApprove={async (data, _actions) => {
+        onApprove={async (data, actions) => {
           try {
-            if (data.orderID) {
-              console.log("PayPal order approved:", data.orderID);
-              onSuccess(data.orderID);
-            } else {
-              onSuccess("UNKNOWN-PAYPAL");
-            }
+            // Capture the PayPal order
+            const order = await actions.order?.capture();
+            const orderId = order?.id || data.orderID || "UNKNOWN-PAYPAL";
+            console.log("PayPal order captured:", orderId, order);
+            onSuccess(orderId);
           } catch (e) {
             console.error("PayPal onApprove handling error", e);
             onClose();
@@ -68,9 +77,6 @@ function PayPalButtonComponent({
           onClose();
         }}
       />
-      <p className="text-xs text-muted-foreground mt-2 text-center">
-        PayPal sandbox prototype – order creation is mocked client-side.
-      </p>
     </div>
   );
 }
@@ -163,7 +169,8 @@ function TabsContent({
 
 export default function Pay() {
   const [activeTab, setActiveTab] = useState("fiat");
-  const [amountMinor, setAmountMinor] = useState(0); // kobo
+  const [amountMinor, setAmountMinor] = useState(0); // kobo (NGN)
+  const [amountUsd, setAmountUsd] = useState(0); // USD for PayPal
   const [donorEmail, setDonorEmail] = useState("");
   const [donorName, setDonorName] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<
@@ -174,57 +181,7 @@ export default function Pay() {
 
   const paystackReady = Boolean(PAYSTACK_PUBLIC_KEY);
   const selectedTierAmount = amountMinor > 0 ? amountMinor / 100 : 0; // NGN
-  // Live NGN -> USD FX rate state
-  const [fxRate, setFxRate] = useState<number | null>(null);
-  const [fxLoading, setFxLoading] = useState(false);
-  const [fxError, setFxError] = useState<string | null>(null);
-  // Compute USD amount when rate available
-  const usdAmount =
-    fxRate && selectedTierAmount > 0
-      ? Number((selectedTierAmount * fxRate).toFixed(2))
-      : 0;
   const currencySymbol = "₦";
-
-  // Fetch conversion rate when PayPal tab becomes active and rate not yet loaded
-  useEffect(() => {
-    if (activeTab !== "paypal") return;
-    if (fxRate !== null) return; // already loaded or attempted
-    let cancelled = false;
-    const loadFx = async () => {
-      setFxLoading(true);
-      setFxError(null);
-      try {
-        const apiUrl =
-          (import.meta as any).env?.VITE_FX_NGN_USD_URL ||
-          "https://api.exchangerate.host/latest?base=NGN&symbols=USD";
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error(`FX status ${res.status}`);
-        const json = await res.json();
-        const rate =
-          typeof json?.rates?.USD === "number"
-            ? json.rates.USD
-            : typeof json?.USD === "number"
-            ? json.USD
-            : null;
-        if (rate == null) throw new Error("USD rate missing");
-        if (!cancelled) setFxRate(rate);
-      } catch (e: any) {
-        const fallback = Number(
-          (import.meta as any).env?.VITE_FX_FALLBACK_RATE || 0.001
-        );
-        if (!cancelled) {
-          setFxError(e?.message || "Failed to load FX");
-          setFxRate(fallback); // fallback rate
-        }
-      } finally {
-        if (!cancelled) setFxLoading(false);
-      }
-    };
-    loadFx();
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab, fxRate]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -238,12 +195,27 @@ export default function Pay() {
   const handleCustomAmountChange = (val: string) => {
     setCustomAmountDisplay(val);
     const numeric = Number(val.replace(/[^0-9]/g, ""));
-    if (!isNaN(numeric)) setAmountMinor(numeric * 100);
-    else setAmountMinor(0);
+    if (!isNaN(numeric)) {
+      if (activeTab === "paypal") {
+        setAmountUsd(numeric);
+      } else {
+        setAmountMinor(numeric * 100);
+      }
+    } else {
+      if (activeTab === "paypal") {
+        setAmountUsd(0);
+      } else {
+        setAmountMinor(0);
+      }
+    }
   };
   const handleTierSelect = (tier: number) => {
     setCustomAmountDisplay(String(tier));
-    setAmountMinor(tier * 100);
+    if (activeTab === "paypal") {
+      setAmountUsd(tier);
+    } else {
+      setAmountMinor(tier * 100);
+    }
   };
   // Removed currency switching (NGN only)
   const handlePaystackCheckout = () => {
@@ -528,50 +500,83 @@ export default function Pay() {
             </TabsContent>
             <TabsContent active={activeTab === "paypal"}>
               <div className="space-y-8">
-                <section className="space-y-4 text-center">
-                  <h2 className="text-xl font-semibold">
+                <section className="space-y-4">
+                  <h2 className="text-xl font-semibold text-center">
                     Donate via PayPal (USD)
                   </h2>
-                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    {fxLoading && "Loading live FX rate…"}
-                    {!fxLoading && fxRate && !fxError && (
-                      <>Live conversion (₦1 = ${fxRate.toFixed(4)} USD).</>
-                    )}
-                    {!fxLoading && fxError && (
-                      <>
-                        FX error: {fxError}. Using fallback rate{" "}
-                        {fxRate?.toFixed(4)}.
-                      </>
-                    )}{" "}
-                    Final audited NGN amount is stored internally.
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto text-center">
+                    Choose a USD donation amount or enter a custom value.
                   </p>
-                  <div className="text-2xl font-bold">
-                    {usdAmount > 0
-                      ? `$${usdAmount.toLocaleString()}`
-                      : selectedTierAmount > 0 && fxLoading
-                      ? "Fetching rate…"
-                      : "Select or enter an NGN amount first"}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {PAYPAL_TIERS.map((tier) => (
+                      <TierCard
+                        key={tier}
+                        tier={tier}
+                        selected={amountUsd === tier}
+                        currencySymbol="$"
+                        onSelect={handleTierSelect}
+                      />
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Custom Amount (USD)
+                    </label>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Enter amount in USD"
+                      value={customAmountDisplay}
+                      onChange={(e) => handleCustomAmountChange(e.target.value)}
+                    />
+                  </div>
+                </section>
+                <section className="space-y-4">
+                  <h2 className="text-xl font-semibold">Donor Info</h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">
+                        Email
+                      </label>
+                      <Input
+                        type="email"
+                        value={donorEmail}
+                        onChange={(e) => setDonorEmail(e.target.value)}
+                        placeholder="you@example.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">
+                        Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={donorName}
+                        onChange={(e) => setDonorName(e.target.value)}
+                        placeholder="Jane Doe"
+                      />
+                    </div>
                   </div>
                 </section>
                 <section className="flex justify-center">
                   <PayPalButtonComponent
-                    amountUsd={usdAmount}
+                    amountUsd={amountUsd}
                     disabled={
                       paymentStatus === "processing" ||
-                      usdAmount <= 0 ||
+                      amountUsd <= 0 ||
                       !emailValid ||
                       !donorName
                     }
                     onSuccess={(orderId) => {
                       setFinalReference(orderId);
                       setPaymentStatus("processing");
-                      // Record mock payment (still storing NGN minor units) to backend
+                      // Record PayPal payment with USD amount
                       fetch("http://localhost:3000/api/payments", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                           reference: orderId,
-                          amountMinor, // keep original NGN minor units for internal accounting
+                          amountMinor: amountUsd * 100, // store USD as cents
                           donorName,
                           donorEmail,
                         }),
