@@ -13,18 +13,13 @@ interface ImpactVideoItem {
 const IMPACT_VIDEOS: ImpactVideoItem[] = [
   {
     id: "YYnjpE4q2f4",
-    title: "Hope, Bag and Blockchain",
+    title: "Hope, Bags and Blockchain",
     description: "The Blocklift Story Begins!",
   },
   {
-    id: "YYnjpE4q2f4",
-    title: "Hope, Bag and Blockchain",
-    description: "The Blocklift Story Begins!",
-  },
-  {
-    id: "YYnjpE4q2f4",
-    title: "Hope, Bag and Blockchain",
-    description: "The Blocklift Story Begins!",
+    id: "2MZI83m5oSI",
+    title: "Blocklift episode 2:",
+    description: "The The Backpack collection",
   },
 ];
 
