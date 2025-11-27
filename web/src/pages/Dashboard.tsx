@@ -1,6 +1,6 @@
 import SimpleHeader from "@/components/simple-header";
 import SimpleFooter from "@/components/simple-footer";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchMetrics } from "@/lib/metrics";
 import { useImpactMetrics } from "@/hooks/useImpactMetrics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +14,48 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Users, DollarSign, Package, MapPin, ArrowLeft } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  Users,
+  DollarSign,
+  Package,
+  MapPin,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  School,
+  X,
+} from "lucide-react";
 import Seo from "@/components/Seo";
-import { CONTRACT_ADDRESS } from "@/lib/constants";
 import { navigate } from "@/lib/router";
+
+// Static distribution data
+const STATIC_DISTRIBUTIONS = [
+  {
+    id: "dist_001",
+    schoolName: "St. Mary's Primary School",
+    location: "Ikeja, Lagos",
+    status: "verified",
+    studentsImpacted: 125,
+    timeAgo: "2 hours ago",
+    txId: "0xe7fbc62c",
+    supplies: ["25 School Bags"],
+    principal: "Mrs. Adebayo",
+    establishedYear: 1995,
+    totalStudents: 342,
+    totalSuppliesDistributed: 1025,
+    imageSrc:
+      "https://via.placeholder.com/400x200/10b981/ffffff?text=St.+Mary's+School",
+    isActive: true,
+  },
+];
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<any[]>([]);
@@ -28,12 +66,20 @@ export default function Dashboard() {
   >(null);
   const [verifyMsg, setVerifyMsg] = useState<string>("");
 
-  // tx feed state
-  const [txs, setTxs] = useState<any[]>([]);
-  const [txLoading, setTxLoading] = useState(true);
-  const [txFilter, setTxFilter] = useState<"all" | "success" | "pending">(
+  // Distribution state
+  const [txFilter, setTxFilter] = useState<"all" | "verified" | "pending">(
     "all"
   );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDistribution, setSelectedDistribution] = useState<
+    (typeof STATIC_DISTRIBUTIONS)[0] | null
+  >(null);
+
+  // Filter distributions
+  const visibleDistributions =
+    txFilter === "all"
+      ? STATIC_DISTRIBUTIONS
+      : STATIC_DISTRIBUTIONS.filter((d) => d.status === txFilter);
 
   const { metrics: liveMetrics, loading: liveLoading } = useImpactMetrics();
 
@@ -56,39 +102,6 @@ export default function Dashboard() {
       mounted = false;
     };
   }, [liveMetrics, liveLoading]);
-
-  // Fetch recent transactions for the contract
-  useEffect(() => {
-    const principal =
-      (import.meta.env.VITE_CONTRACT_ADDRESS as string | undefined) || "";
-    if (!principal) {
-      setTxLoading(false);
-      return;
-    }
-    const network =
-      (import.meta.env.VITE_NETWORK as string | undefined) || "mainnet";
-    const base = `https://api.${network}.hiro.so`;
-    const url = `${base}/extended/v1/address/${principal}/transactions?limit=25`;
-    setTxLoading(true);
-    fetch(url)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`${r.status}`))))
-      .then((json) => {
-        const items = Array.isArray(json?.results) ? json.results : [];
-        const filtered = items.filter(
-          (t: any) => t.tx_type === "contract_call"
-        );
-        setTxs(filtered);
-      })
-      .catch(() => setTxs([]))
-      .finally(() => setTxLoading(false));
-  }, []);
-
-  const visibleTxs = useMemo(() => {
-    if (txFilter === "all") return txs;
-    if (txFilter === "success")
-      return txs.filter((t) => t.tx_status === "success");
-    return txs.filter((t) => t.tx_status !== "success");
-  }, [txs, txFilter]);
 
   const startVerify = async () => {
     const id = verifyInput.trim();
@@ -268,138 +281,246 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {CONTRACT_ADDRESS ? (
-          <>
-            {/* Transactions Feed */}
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-sm text-[var(--muted-foreground)]">
-                Latest Blockchain Distributions
-              </span>
-              <div className="ml-auto flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant={txFilter === "all" ? "default" : "ghost"}
-                  onClick={() => setTxFilter("all")}
-                >
-                  All
-                </Button>
-                <Button
-                  size="sm"
-                  variant={txFilter === "success" ? "default" : "ghost"}
-                  onClick={() => setTxFilter("success")}
-                >
-                  Verified
-                </Button>
-                <Button
-                  size="sm"
-                  variant={txFilter === "pending" ? "default" : "ghost"}
-                  onClick={() => setTxFilter("pending")}
-                >
-                  Pending
-                </Button>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {txLoading ? (
-                <Card className="bg-[var(--surface)] border border-[var(--border)]">
-                  <CardContent className="py-6">Loading…</CardContent>
-                </Card>
-              ) : visibleTxs.length === 0 ? (
-                <Card className="bg-[var(--surface)] border border-[var(--border)]">
-                  <CardContent className="py-6">
-                    No recent distributions.
-                  </CardContent>
-                </Card>
-              ) : (
-                <Accordion type="single" collapsible>
-                  {visibleTxs.map((tx: any) => {
-                    const network =
-                      (import.meta.env.VITE_NETWORK as string | undefined) ||
-                      "mainnet";
-                    const href = `https://explorer.stacks.co/txid/${tx.tx_id}?chain=${network}`;
-                    const school =
-                      tx.contract_call?.function_name?.replace(/[-_]/g, " ") ||
-                      "Distribution";
-                    const status = tx.tx_status;
-                    const badge =
-                      status === "success" ? (
-                        <Badge className="bg-emerald-600 hover:bg-emerald-600/90">
-                          Verified
-                        </Badge>
-                      ) : status === "pending" ? (
-                        <Badge className="bg-orange-500 hover:bg-orange-500/90">
-                          Pending
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">{status}</Badge>
-                      );
-                    return (
-                      <Card
-                        key={tx.tx_id}
-                        className="bg-[var(--surface)] border border-[var(--border)]"
-                      >
-                        <AccordionItem value={tx.tx_id}>
-                          <AccordionTrigger className="px-4">
-                            <div className="flex items-center gap-3 w-full">
-                              <div className="font-medium flex-1 text-left">
-                                {school}
-                              </div>
-                              <div className="text-sm text-[var(--muted-foreground)] mr-2">
-                                {new Date(
-                                  tx.burn_block_time * 1000
-                                ).toLocaleString?.() || ""}
-                              </div>
-                              {badge}
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <CardContent className="pt-0 px-4 pb-4">
-                              <div className="text-sm mb-2 text-[var(--muted-foreground)]">
-                                Function:{" "}
-                                <span className="text-[var(--foreground)] font-mono">
-                                  {tx.contract_call?.function_name}
-                                </span>
-                              </div>
-                              <div className="text-sm mb-3 break-all">
-                                Tx:{" "}
-                                <a
-                                  className="text-[var(--primary)] underline"
-                                  href={href}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  {tx.tx_id}
-                                </a>
-                              </div>
-                              <div className="text-xs text-[var(--muted-foreground)]">
-                                Args:{" "}
-                                <span className="font-mono break-all">
-                                  {JSON.stringify(
-                                    tx.contract_call?.function_args?.map(
-                                      (a: any) => a?.repr ?? a
-                                    ),
-                                    null,
-                                    0
-                                  )}
-                                </span>
-                              </div>
-                            </CardContent>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Card>
-                    );
-                  })}
-                </Accordion>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="mt-8 text-center text-xs text-[var(--muted-foreground)]">
-            Configure contract address & name to view live on-chain
-            distributions.
+        {/* Distributions Feed */}
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-sm text-[var(--muted-foreground)]">
+            Latest Blockchain Distributions
+          </span>
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              size="sm"
+              variant={txFilter === "all" ? "default" : "ghost"}
+              onClick={() => setTxFilter("all")}
+            >
+              All
+            </Button>
+            <Button
+              size="sm"
+              variant={txFilter === "verified" ? "default" : "ghost"}
+              onClick={() => setTxFilter("verified")}
+            >
+              Verified
+            </Button>
+            <Button
+              size="sm"
+              variant={txFilter === "pending" ? "default" : "ghost"}
+              onClick={() => setTxFilter("pending")}
+            >
+              Pending
+            </Button>
           </div>
-        )}
+        </div>
+
+        <div className="space-y-3">
+          {visibleDistributions.length === 0 ? (
+            <Card className="bg-[var(--surface)] border border-[var(--border)]">
+              <CardContent className="py-6">
+                No distributions found.
+              </CardContent>
+            </Card>
+          ) : (
+            <Accordion type="single" collapsible>
+              {visibleDistributions.map((dist) => {
+                const badge =
+                  dist.status === "verified" ? (
+                    <Badge className="bg-emerald-600 hover:bg-emerald-600/90">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-orange-500 hover:bg-orange-500/90">
+                      <Clock className="h-3 w-3 mr-1" />
+                      Pending
+                    </Badge>
+                  );
+                return (
+                  <Card
+                    key={dist.id}
+                    className="bg-[var(--surface)] border border-[var(--border)] cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => {
+                      setSelectedDistribution(dist);
+                      setIsModalOpen(true);
+                    }}
+                  >
+                    <AccordionItem value={dist.id}>
+                      <AccordionTrigger className="px-4 hover:no-underline">
+                        <div className="flex items-center gap-3 w-full">
+                          <School className="h-5 w-5 text-primary" />
+                          <div className="flex-1 text-left">
+                            <div className="font-medium">{dist.schoolName}</div>
+                            <div className="text-xs text-[var(--muted-foreground)] flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {dist.location}
+                            </div>
+                          </div>
+                          <div className="text-sm text-[var(--muted-foreground)] mr-2">
+                            {dist.timeAgo}
+                          </div>
+                          {badge}
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent onClick={(e) => e.stopPropagation()}>
+                        <CardContent className="pt-0 px-4 pb-4">
+                          <div className="text-sm mb-2">
+                            <span className="text-[var(--muted-foreground)]">
+                              Students Impacted:{" "}
+                            </span>
+                            <span className="font-semibold">
+                              {dist.studentsImpacted}
+                            </span>
+                          </div>
+                          <div className="text-sm mb-2">
+                            <span className="text-[var(--muted-foreground)]">
+                              Supplies:{" "}
+                            </span>
+                            <span>{dist.supplies.join(", ")}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-[var(--muted-foreground)]">
+                              Tx ID:{" "}
+                            </span>
+                            <span className="font-mono text-xs">
+                              {dist.txId}
+                            </span>
+                          </div>
+                        </CardContent>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Card>
+                );
+              })}
+            </Accordion>
+          )}
+        </div>
+
+        {/* Distribution Detail Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogClose>
+            {selectedDistribution && (
+              <>
+                <div className="w-full h-48 bg-muted rounded-t-lg overflow-hidden">
+                  <img
+                    src={selectedDistribution.imageSrc}
+                    alt={selectedDistribution.schoolName}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <DialogHeader className="pt-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <DialogTitle className="text-2xl flex items-center gap-2">
+                        <School className="h-6 w-6 text-primary" />
+                        {selectedDistribution.schoolName}
+                      </DialogTitle>
+                      <DialogDescription className="flex items-center gap-1 mt-1">
+                        <MapPin className="h-4 w-4" />
+                        {selectedDistribution.location}
+                      </DialogDescription>
+                    </div>
+                    {selectedDistribution.isActive && (
+                      <Badge className="bg-emerald-600">Active</Badge>
+                    )}
+                  </div>
+                </DialogHeader>
+
+                <div className="grid grid-cols-2 gap-4 my-4">
+                  <Card className="border-2 border-primary/20">
+                    <CardContent className="p-2 text-center">
+                      <Users className="mx-auto mb-2 text-primary" />
+                      <div className="text-3xl font-bold text-foreground">
+                        {selectedDistribution.totalStudents}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Total Students
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-2 border-primary/20">
+                    <CardContent className="p-2 text-center">
+                      <Package className="mx-auto mb-2 text-primary" />
+                      <div className="text-3xl font-bold text-foreground">
+                        {selectedDistribution.totalSuppliesDistributed}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        Supplies Distributed
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-sm text-muted-foreground">
+                      Principal
+                    </span>
+                    <span className="font-medium">
+                      {selectedDistribution.principal}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-sm text-muted-foreground">
+                      Established
+                    </span>
+                    <span className="font-medium">
+                      {selectedDistribution.establishedYear}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-sm text-muted-foreground">
+                      Last Distribution
+                    </span>
+                    <span className="font-medium">
+                      {selectedDistribution.timeAgo}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b">
+                    <span className="text-sm text-muted-foreground">
+                      Status
+                    </span>
+                    {selectedDistribution.status === "verified" ? (
+                      <Badge className="bg-emerald-600">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-orange-500">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Pending
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="py-2">
+                    <span className="text-sm text-muted-foreground block mb-2">
+                      Recent Supplies
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedDistribution.supplies.map((supply, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          <Package className="h-3 w-3 mr-1" />
+                          {supply}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsModalOpen(false)}
+                    className="cursor-pointer w-full"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
       <SimpleFooter />
     </div>
