@@ -1,10 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import BlockliftBag from "/src/assets/images/BlockliftBag.jpg";
 import BlockliftBag2 from "/src/assets/images/BlockliftBag2.jpg";
 import BlockliftSandals from "/src/assets/images/BlockliftSandals.jpg";
 import BlockliftImpact from "/src/assets/images/BlockliftImpact.jpg";
+import BagGathered from "/src/assets/images/bag-gathered.jpg";
+import BagGathering3 from "/src/assets/images/bag-gathering3.jpg";
+import Bag1 from "/src/assets/images/bag1.jpg";
+import Bag2 from "/src/assets/images/bag2.jpg";
+import Bag3 from "/src/assets/images/bag3.jpg";
+import BagsGathering from "/src/assets/images/bags-gathering.jpg";
+import BagsGathering2 from "/src/assets/images/bags-gathering2.jpg";
+import Bags from "/src/assets/images/bags.jpg";
 
-// Four gallery items using newly added Blocklift asset images
+// All gallery items using Blocklift asset images
 const galleryItems = [
   {
     src: BlockliftBag,
@@ -34,7 +44,57 @@ const galleryItems = [
     description:
       "Capturing verifiable evidence of transparent impact on-chain.",
   },
+  {
+    src: BagGathered,
+    alt: "volunteers gathering supply bags",
+    title: "Volunteers Gathering",
+    description: "Volunteers coming together to organize essential supplies.",
+  },
+  {
+    src: BagGathering3,
+    alt: "Volunteers organizing supply distribution",
+    title: "Volunteer Coordination",
+    description: "Dedicated volunteers organizing efficient distribution.",
+  },
+  {
+    src: Bag1,
+    alt: "Individual supply bag ready for distribution",
+    title: "Supply Preparation",
+    description: "Carefully prepared bags ensuring quality and completeness.",
+  },
+  {
+    src: Bag2,
+    alt: "Supply bag packed with essential items",
+    title: "Essential Items Packing",
+    description: "Each bag packed with carefully selected essential items.",
+  },
+  {
+    src: Bag3,
+    alt: "Ready-to-distribute supply package",
+    title: "Distribution Ready",
+    description: "Final checks before community distribution.",
+  },
+  {
+    src: BagsGathering,
+    alt: "Multiple supply bags being gathered for distribution",
+    title: "Bulk Distribution Setup",
+    description: "Organizing large-scale distribution to maximize impact.",
+  },
+  {
+    src: BagsGathering2,
+    alt: "Team coordinating bag distribution logistics",
+    title: "Logistics Team",
+    description: "Our logistics team ensuring smooth distribution operations.",
+  },
+  {
+    src: Bags,
+    alt: "Collection of Blocklift supply bags",
+    title: "Supply Collection",
+    description: "Complete collection of supplies ready for communities.",
+  },
 ];
+
+const ITEMS_PER_PAGE = 4;
 
 const GalleryItem = ({ item }: { item: (typeof galleryItems)[0] }) => {
   return (
@@ -65,6 +125,42 @@ const GalleryItem = ({ item }: { item: (typeof galleryItems)[0] }) => {
 
 export default function ImpactGallery() {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(galleryItems.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentItems = galleryItems.slice(startIndex, endIndex);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+      // Scroll to gallery section smoothly
+      containerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+      // Scroll to gallery section smoothly
+      containerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    containerRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -93,7 +189,7 @@ export default function ImpactGallery() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [currentPage]);
 
   return (
     <section id="gallery" className="w-full py-16">
@@ -110,9 +206,54 @@ export default function ImpactGallery() {
           ref={containerRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6"
         >
-          {galleryItems.map((item, i) => (
-            <GalleryItem item={item} key={i} />
+          {currentItems.map((item, i) => (
+            <GalleryItem item={item} key={startIndex + i} />
           ))}
+        </div>
+
+        {/* Pagination Controls */}
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="icon"
+                onClick={() => goToPage(page)}
+                className="w-10 h-10"
+                aria-label={`Go to page ${page}`}
+                aria-current={currentPage === page ? "page" : undefined}
+              >
+                {page}
+              </Button>
+            ))}
+          </div>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Page Info */}
+        <div className="text-center mt-4 text-sm text-muted-foreground">
+          Page {currentPage} of {totalPages} ({galleryItems.length} total
+          images)
         </div>
       </div>
     </section>
