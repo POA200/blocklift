@@ -13,6 +13,21 @@ import Bag3 from "/src/assets/images/bag3.jpg";
 import BagsGathering from "/src/assets/images/bags-gathering.jpg";
 import BagsGathering2 from "/src/assets/images/bags-gathering2.jpg";
 import Bags from "/src/assets/images/bags.jpg";
+import StaffsStudent1 from "/src/assets/images/staffs and student (1).jpg";
+import StaffsStudent2 from "/src/assets/images/staffs and student (2).jpg";
+import StaffsStudent3 from "/src/assets/images/staffs and student (3).jpg";
+import StaffsStudent4 from "/src/assets/images/staffs and student (4).jpg";
+import StaffsStudent5 from "/src/assets/images/staffs and student (5).jpg";
+import StaffsStudent6 from "/src/assets/images/staffs and student (6).jpg";
+import StaffsStudent7 from "/src/assets/images/staffs and student (7).jpg";
+import StaffsStudent8 from "/src/assets/images/staffs and student (8).jpg";
+import StaffsStudent9 from "/src/assets/images/staffs and student (9).jpg";
+import StaffsStudent10 from "/src/assets/images/staffs and student (10).jpg";
+import StaffsStudent11 from "/src/assets/images/staffs and student (11).jpg";
+import StaffsStudent12 from "/src/assets/images/staffs and student (12).jpg";
+import StaffsStudent13 from "/src/assets/images/staffs and student (13).jpg";
+import StaffsStudent14 from "/src/assets/images/staffs and student (14).jpg";
+import StaffsStudent15 from "/src/assets/images/staffs and student (15).jpg";
 
 // All gallery items using Blocklift asset images
 const galleryItems = [
@@ -91,6 +106,96 @@ const galleryItems = [
     alt: "Collection of Blocklift supply bags",
     title: "Supply Collection",
     description: "Complete collection of supplies ready for communities.",
+  },
+  {
+    src: StaffsStudent1,
+    alt: "Staff and students collaborating on impact initiatives",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent2,
+    alt: "Educational engagement with students",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent3,
+    alt: "Staff mentoring students in community programs",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent4,
+    alt: "Students participating in community activities",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent5,
+    alt: "Staff and students at community event",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent6,
+    alt: "Educational workshop with students",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent7,
+    alt: "Students receiving support and guidance",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent8,
+    alt: "Collaborative learning environment",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent9,
+    alt: "Staff and students in educational setting",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent10,
+    alt: "Student engagement activities",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent11,
+    alt: "Staff facilitating student programs",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent12,
+    alt: "Students in community development initiative",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent13,
+    alt: "Educational support and mentoring",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent14,
+    alt: "Staff and students achieving milestones",
+    title: null,
+    description: null,
+  },
+  {
+    src: StaffsStudent15,
+    alt: "Community impact through education",
+    title: null,
+    description: null,
   },
 ];
 
