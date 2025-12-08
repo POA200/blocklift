@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import ImageUploadForm from "@/components/admin/ImageUploadForm";
 import BlockliftBag from "/src/assets/images/BlockliftBag.jpg";
 import BlockliftBag2 from "/src/assets/images/BlockliftBag2.jpg";
 import BlockliftSandals from "/src/assets/images/BlockliftSandals.jpg";
@@ -231,6 +233,10 @@ const GalleryItem = ({ item }: { item: (typeof galleryItems)[0] }) => {
 export default function ImpactGallery() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+
+  // Check if developer mode is enabled via environment variable
+  const isDeveloperMode = import.meta.env.VITE_IS_DEVELOPER === "true";
 
   const totalPages = Math.ceil(galleryItems.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -299,13 +305,41 @@ export default function ImpactGallery() {
   return (
     <section id="gallery" className="w-full py-16">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <p className="text-xs uppercase tracking-wider text-primary mb-2">
-            Blocklift Gallery
-          </p>
-          <h2 className="text-2xl md:text-4xl font-semibold mb-2 md:mb-4">
-            BlockLift in Action
-          </h2>
+        <div className="flex justify-between items-center mb-8 max-w-2xl mx-auto">
+          <div className="text-center flex-1">
+            <p className="text-xs uppercase tracking-wider text-primary mb-2">
+              Blocklift Gallery
+            </p>
+            <h2 className="text-2xl md:text-4xl font-semibold mb-2 md:mb-4">
+              BlockLift in Action
+            </h2>
+          </div>
+
+          {/* Conditionally Rendered Developer Upload Button */}
+          {isDeveloperMode && (
+            <Dialog
+              open={isUploadDialogOpen}
+              onOpenChange={setIsUploadDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button variant="secondary" size="sm" className="ml-4">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Upload Image
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[500px]">
+                <ImageUploadForm
+                  isOpen={isUploadDialogOpen}
+                  onClose={() => setIsUploadDialogOpen(false)}
+                  onSuccess={() => {
+                    setIsUploadDialogOpen(false);
+                    // Optionally refresh the page or gallery data here
+                    console.log("✅ Image uploaded successfully to gallery");
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
         <div
           ref={containerRef}

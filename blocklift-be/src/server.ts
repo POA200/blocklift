@@ -1,8 +1,10 @@
 import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
 import ambassadorRouter from './routes/ambassador';
 import paymentsRouter from './routes/payments';
+import galleryRouter from './routes/gallery';
 
 dotenv.config();
 
@@ -12,7 +14,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({ 
     origin: ['http://localhost:5173', 'https://www.blocklift.org'], 
 }));
-app.use(express.json()); 
+app.use(express.json());
+
+// Serve uploaded files from persistent storage
+// This makes files accessible at: http://localhost:3000/uploads/gallery/filename.jpg
+const uploadsPath = process.env.NODE_ENV === 'production'
+	? '/var/data/uploads'
+	: path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath)); 
 
 // Basic health check route
 app.get('/api/health', (req, res) => {
@@ -22,6 +31,7 @@ app.get('/api/health', (req, res) => {
 // Ambassador routes
 app.use('/api/ambassador', ambassadorRouter);
 app.use('/api/payments', paymentsRouter);
+app.use('/api/gallery', galleryRouter);
 
 // Not found handler
 app.use((req: Request, res: Response) => {
