@@ -72,7 +72,7 @@ const CryptoPayment: React.FC = () => {
       // Convert STX to microstacks
       const microAmount = Math.round(Number(amount) * 1e6);
       // For demo, send to self (walletAddress)
-      const response = await request("stx_transferStx", {
+      await request("stx_transferStx", {
         amount: microAmount.toString(),
         recipient: RECEIVER_ADDRESS,
         memo: "Blocklift test transfer",

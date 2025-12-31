@@ -21,7 +21,10 @@ const ConnectWalletButton: React.FC<Props> = ({ onConnect }) => {
         const stxVal = userData.addresses.stx as any;
         if (Array.isArray(stxVal)) {
           stx = stxVal[0]?.address;
-        } else if (typeof stxVal === "object" && ("testnet" in stxVal || "mainnet" in stxVal)) {
+        } else if (
+          typeof stxVal === "object" &&
+          ("testnet" in stxVal || "mainnet" in stxVal)
+        ) {
           stx = stxVal.testnet || stxVal.mainnet;
         }
       }
@@ -49,7 +52,10 @@ const ConnectWalletButton: React.FC<Props> = ({ onConnect }) => {
         const stxVal = addresses.stx;
         if (Array.isArray(stxVal)) {
           stx = stxVal[0]?.address;
-        } else if (typeof stxVal === "object" && ("testnet" in stxVal || "mainnet" in stxVal)) {
+        } else if (
+          typeof stxVal === "object" &&
+          ("testnet" in stxVal || "mainnet" in stxVal)
+        ) {
           stx = stxVal.testnet || stxVal.mainnet;
         }
       }
