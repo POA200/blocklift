@@ -37,6 +37,9 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
 	const token = parts[1];
 	const secretToken = process.env.UPLOAD_SECRET_TOKEN;
 
+	console.log('Received token:', token);
+	console.log('Expected token:', secretToken);
+
 	if (!secretToken) {
 		console.error('UPLOAD_SECRET_TOKEN environment variable is not set');
 		return res.status(500).json({
@@ -110,6 +113,35 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 // ============================================
+// 3.5 GET UPLOADED IMAGES
+// ============================================
+router.get('/images', (req: Request, res: Response) => {
+	try {
+		// Read files from upload directory
+		const files = fs.readdirSync(uploadDir);
+		
+		// Filter only image files and create URLs
+		const imageFiles = files
+			.filter(file => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
+			.map(filename => {
+				const renderUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 3000}`;
+				return {
+					src: `${renderUrl}/uploads/gallery/${filename}`,
+					alt: 'Community uploaded image',
+					title: null,
+					description: null,
+					filename,
+				};
+			});
+		
+		res.json({ images: imageFiles });
+	} catch (error) {
+		console.error('Error reading gallery images:', error);
+		res.status(500).json({ error: 'Failed to fetch gallery images' });
+	}
+});
+
+// ============================================
 // 4. PROTECTED FILE UPLOAD ROUTE
 // ============================================
 /**
@@ -142,14 +174,9 @@ router.post(
 				});
 			}
 
-			// Validate required fields
-			const { description, location } = req.body;
-			if (!description || !location) {
-				return res.status(400).json({
-					error: 'Bad Request',
-					message: 'Missing required fields: description and location',
-				});
-			}
+			// Extract optional fields (default to null if not provided)
+			const description = req.body.description || null;
+			const location = req.body.location || null;
 
 			// Extract file information
 			const filename = req.file.filename;
@@ -197,6 +224,67 @@ router.post(
 			});
 		} catch (err) {
 			console.error('Gallery upload error:', err);
+			const message =
+				err instanceof Error ? err.message : 'Unknown error occurred';
+			res.status(500).json({
+				error: 'Internal Server Error',
+				message,
+			});
+		}
+	}
+);
+
+// ============================================
+// 5. DELETE IMAGE ROUTE
+// ============================================
+/**
+ * DELETE /api/gallery/delete/:filename
+ * 
+ * Expects:
+ * - Authorization header with Bearer token
+ * - filename as URL parameter
+ * 
+ * Response:
+ * - 200 OK if deleted successfully
+ * - 401 Unauthorized (invalid token)
+ * - 404 Not Found (file doesn't exist)
+ * - 500 Internal Server Error
+ */
+router.delete(
+	'/delete/:filename',
+	checkAuth,
+	async (req: Request, res: Response, next: NextFunction) => {
+		try {
+			const { filename } = req.params;
+			
+			if (!filename) {
+				return res.status(400).json({
+					error: 'Bad Request',
+					message: 'Filename is required',
+				});
+			}
+
+			// Construct file path
+			const filePath = path.join(uploadDir, filename);
+
+			// Check if file exists
+			if (!fs.existsSync(filePath)) {
+				return res.status(404).json({
+					error: 'Not Found',
+					message: 'Image file not found',
+				});
+			}
+
+			// Delete the file
+			fs.unlinkSync(filePath);
+
+			res.status(200).json({
+				success: true,
+				message: 'Image deleted successfully',
+				filename,
+			});
+		} catch (err) {
+			console.error('Gallery delete error:', err);
 			const message =
 				err instanceof Error ? err.message : 'Unknown error occurred';
 			res.status(500).json({

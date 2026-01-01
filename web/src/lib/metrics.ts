@@ -34,12 +34,6 @@ export const impactMetrics = [
 ]
 
 export async function fetchMetrics() {
-  // Priority order:
-  // 1) VITE_METRICS_URL (absolute URL)
-  // 2) window.__METRICS_URL__ (absolute URL)
-  // 3) In production, try a relative Vercel function: /api/metrics
-  // 4) In dev, optionally try local mock if VITE_USE_MOCK === '1'
-  // 5) Fallback to static impactMetrics
 
   const envUrl = (import.meta.env.VITE_METRICS_URL as string | undefined) || undefined
   const rawCustom = typeof window !== 'undefined' ? window.__METRICS_URL__ : undefined

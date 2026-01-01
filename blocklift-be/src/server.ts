@@ -11,10 +11,24 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Update CORS to allow your frontend URL
+const allowedOrigins = [
+    'http://localhost:5173',
+    'https://www.blocklift.org',
+    process.env.FRONTEND_URL, // Add your Vercel frontend URL here
+].filter(Boolean);
+
 app.use(cors({ 
-    origin: ['http://localhost:5173', 'https://www.blocklift.org'], 
+    origin: allowedOrigins,
+    credentials: true,
 }));
 app.use(express.json());
+
+// Log all requests
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
 
 // Serve uploaded files from persistent storage
 // This makes files accessible at: http://localhost:3000/uploads/gallery/filename.jpg
