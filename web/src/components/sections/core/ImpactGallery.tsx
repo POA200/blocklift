@@ -286,7 +286,6 @@ export default function ImpactGallery() {
   const [uploadError, setUploadError] = useState("");
   const [uploadSuccess, setUploadSuccess] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [uploadedImages, setUploadedImages] = useState<typeof galleryItems>([]);
   const [allImages, setAllImages] = useState(galleryItems);
 
   // Delete dialog state
@@ -306,7 +305,6 @@ export default function ImpactGallery() {
         const response = await fetch(`${backendUrl}/api/gallery/images`);
         if (response.ok) {
           const data = await response.json();
-          setUploadedImages(data.images);
           setAllImages([...galleryItems, ...data.images]);
         }
       } catch (error) {
@@ -394,7 +392,6 @@ export default function ImpactGallery() {
       const refreshResponse = await fetch(`${backendUrl}/api/gallery/images`);
       if (refreshResponse.ok) {
         const data = await refreshResponse.json();
-        setUploadedImages(data.images);
         setAllImages([...galleryItems, ...data.images]);
       }
 
@@ -471,7 +468,6 @@ export default function ImpactGallery() {
       const refreshResponse = await fetch(`${backendUrl}/api/gallery/images`);
       if (refreshResponse.ok) {
         const data = await refreshResponse.json();
-        setUploadedImages(data.images);
         setAllImages([...galleryItems, ...data.images]);
       }
 
@@ -542,7 +538,7 @@ export default function ImpactGallery() {
             <GalleryItem
               item={item}
               key={startIndex + i}
-              onDelete={item.filename ? handleDeleteClick : undefined}
+              onDelete={(item as any).filename ? handleDeleteClick : undefined}
             />
           ))}
           {currentPage === totalPages && (
