@@ -3,7 +3,7 @@ import Seo from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Package, MapPin, ArrowLeft } from "lucide-react";
+import { Lock, Package, MapPin } from "lucide-react";
 import SimpleHeader from "@/components/simple-header";
 import SimpleFooter from "@/components/simple-footer";
 import BlockliftLogo from "@/assets/images/BlockliftLogo.png";
@@ -21,51 +21,42 @@ export default function Sponsor() {
           title="Sponsor Impact"
           description="Donate with verifiable, on-chain proof to fund essential education materials and Web3 literacy."
         />
-        <main className="w-full mx-auto px-6 py-24 max-w-7xl">
-          {/* Return Button */}
-          <div className="max-w-3xl mx-auto -mt-6 mb-10 text-left">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              aria-label="Return to previous page"
-              className="inline-flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          </div>
+        <main className="w-full mx-auto px-6 py-32 max-w-7xl">
           {/* Hero */}
-          <section className="max-w-3xl mx-auto text-center mb-16">
-            <div className="flex justify-center mb-8">
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-center mb-16 py-16">
+            {/* Left Logo */}
+            <div className="flex justify-center lg:justify-start">
               <img
                 src={BlockliftLogo}
                 alt="BlockLift logo"
-                className="h-24 w-auto drop-shadow-sm select-none"
+                className="h-80 w-auto drop-shadow-sm select-none"
                 loading="lazy"
                 decoding="async"
               />
             </div>
-            <h1 className="text-2xl md:text-4xl font-medium">
-              Verifiable Impact!
-            </h1>
-            <h1 className="text-2xl md:text-4xl font-medium mb-6">
-              Secure Your Legacy on the
-              <span className="text-primary"> Bitcoin L2.</span>
-            </h1>
-            <p className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed">
-              BlockLift guarantees that every penny funds essential school
-              materials, transforming communities with 100% on-chain
-              transparency.
-            </p>
-            <Button
-              onClick={handlePrimary}
-              className="cursor-pointer"
-              size={"lg"}
-              aria-label="Sponsor impact now"
-            >
-              Sponsor An Impact Today →
-            </Button>
+            {/* Right Content */}
+            <div className="flex flex-col justify-center">
+              <h1 className="text-2xl md:text-4xl font-medium">
+                Verifiable Impact!
+              </h1>
+              <h1 className="text-2xl md:text-4xl font-medium mb-6">
+                Secure Your Legacy on the
+                <span className="text-primary"> Bitcoin L2.</span>
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground mb-8 leading-relaxed">
+                BlockLift guarantees that every penny funds essential school
+                materials, transforming communities with 100% on-chain
+                transparency.
+              </p>
+              <Button
+                onClick={handlePrimary}
+                className="cursor-pointer w-fit"
+                size={"lg"}
+                aria-label="Sponsor impact now"
+              >
+                Sponsor An Impact Today →
+              </Button>
+            </div>
           </section>
 
           {/* Trust & Security Bar */}
