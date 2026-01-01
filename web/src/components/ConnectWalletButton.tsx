@@ -15,7 +15,7 @@ const ConnectWalletButton: React.FC<Props> = ({ onConnect }) => {
   useEffect(() => {
     if (isConnected()) {
       const userData = getLocalStorage();
-      if (userData?.addresses) {
+      if (userData?.addresses?.stx && userData.addresses.stx.length > 0) {
         const stx = userData.addresses.stx[0].address;
         setConnected(!!stx);
         setAddress(stx);
@@ -41,8 +41,8 @@ const ConnectWalletButton: React.FC<Props> = ({ onConnect }) => {
     setConnecting(true);
     try {
       const response = await connect();
-      if (response.addresses) {
-        const stx = response.addresses.stx[0].address;
+      if (response.addresses && response.addresses.length > 0) {
+        const stx = response.addresses[0].address;
         setConnected(!!stx);
         setAddress(stx);
         if (!!stx) {
