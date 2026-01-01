@@ -16,7 +16,7 @@ const allowedOrigins = [
     'http://localhost:5173',
     'https://www.blocklift.org',
     process.env.FRONTEND_URL, // Add your Vercel frontend URL here
-].filter(Boolean);
+].filter((origin): origin is string => Boolean(origin));
 
 app.use(cors({ 
     origin: allowedOrigins,
