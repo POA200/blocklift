@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 const PAYPAL_CURRENCY = "USD";
 const PAYPAL_TIERS = [5, 10, 50];
@@ -43,25 +42,31 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
   };
 
   return (
-    <div className="space-y-8 max-w-md mx-auto">
-      <section className="space-y-4">
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <section className="space-y-6">
         <h2 className="text-xl font-semibold text-center">
           Donate via PayPal (USD)
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto text-center">
           Choose a USD donation amount or enter a custom value.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PAYPAL_TIERS.map((tier) => (
-            <Button
+            <button
               key={tier}
               type="button"
-              variant={selectedTier === tier ? "default" : "outline"}
-              className={selectedTier === tier ? "ring-2 ring-primary/50" : ""}
+              className={`p-6 border rounded-lg text-left transition-all hover:border-primary/50 ${
+                selectedTier === tier
+                  ? "border-primary bg-primary/5"
+                  : "border-border"
+              }`}
               onClick={() => handleTierSelect(tier)}
             >
-              ${tier}
-            </Button>
+              <div className="text-2xl font-bold mb-3">${tier}</div>
+              <p className="text-sm text-muted-foreground">
+                Support impact logistics with a ${tier} donation.
+              </p>
+            </button>
           ))}
         </div>
         <div className="space-y-2">
@@ -74,10 +79,11 @@ const PayPalPayment: React.FC<PayPalPaymentProps> = ({
             placeholder="Enter amount in USD"
             value={customAmount}
             onChange={(e) => handleCustomAmountChange(e.target.value)}
+            className="w-full"
           />
         </div>
       </section>
-      <section className="space-y-4">
+      <section className="space-y-6">
         <h2 className="text-xl font-semibold">Donor Info</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">

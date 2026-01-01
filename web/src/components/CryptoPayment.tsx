@@ -1,15 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { STACKS_TESTNET, defaultUrlFromNetwork } from "@stacks/network";
-import { request, disconnect } from "@stacks/connect";
+import {
+  connect,
+  disconnect,
+  isConnected,
+  getLocalStorage,
+  request,
+} from "@stacks/connect";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ConnectWalletButton from "./ConnectWalletButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogOut } from "lucide-react";
 
 const CryptoPayment: React.FC = () => {
   const [walletConnected, setWalletConnected] = useState(false);
-  const [connectKey, setConnectKey] = useState(0);
   const [walletAddress, setWalletAddress] = useState<string | undefined>(
     undefined
   );
@@ -17,7 +21,21 @@ const CryptoPayment: React.FC = () => {
   const [amount, setAmount] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [paying, setPaying] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const RECEIVER_ADDRESS = "ST2BWMDQ6FFHCRGRP1VCAXHSMYTDY8J0T0G16627R";
+
+  // Check if already connected on mount
+  useEffect(() => {
+    if (isConnected()) {
+      const userData = getLocalStorage();
+      if (userData?.addresses?.stx && userData.addresses.stx.length > 0) {
+        const stxAddress = userData.addresses.stx[0].address;
+        setWalletConnected(true);
+        setWalletAddress(stxAddress);
+        fetchBalance(stxAddress);
+      }
+    }
+  }, []);
 
   // Fetch balance from Stacks API
   const fetchBalance = async (address: string) => {
@@ -34,11 +52,25 @@ const CryptoPayment: React.FC = () => {
     }
   };
 
-  const handleConnectWallet = (address?: string) => {
-    if (address) {
-      setWalletConnected(true);
-      setWalletAddress(address);
-      fetchBalance(address);
+  const handleConnectWallet = async () => {
+    if (isConnected()) {
+      console.log("Already authenticated");
+      return;
+    }
+
+    setConnecting(true);
+    try {
+      const response = await connect();
+      if (response.addresses && response.addresses.length > 0) {
+        const stxAddress = response.addresses[0].address;
+        setWalletConnected(true);
+        setWalletAddress(stxAddress);
+        fetchBalance(stxAddress);
+      }
+    } catch (e) {
+      console.error("Connection failed:", e);
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -49,7 +81,6 @@ const CryptoPayment: React.FC = () => {
     setBalance(undefined);
     setAmount("");
     setError("");
-    setConnectKey((k) => k + 1); // force re-mount ConnectWalletButton
   };
 
   const handleAmountChange = (val: string) => {
@@ -70,34 +101,39 @@ const CryptoPayment: React.FC = () => {
     setPaying(true);
     try {
       // Convert STX to microstacks
-      const microAmount = Math.round(Number(amount) * 1e6);
-      // For demo, send to self (walletAddress)
-      await request("stx_transferStx", {
-        amount: microAmount.toString(),
+      const microAmount = Math.round(Number(amount) * 1e6).toString();
+
+      const response = await request("stx_transferStx", {
+        amount: microAmount,
         recipient: RECEIVER_ADDRESS,
-        memo: "Blocklift test transfer",
+        memo: "Blocklift donation",
       });
-      // Optionally show txid or success message
-      // alert(`Transaction ID: ${response.txid}`);
+
+      console.log("Transaction ID:", response.txid);
+      // Optionally show success message
     } catch (e) {
-      // Optionally handle error
+      console.error("Transaction failed:", e);
+      setError("Transaction failed. Please try again.");
     }
     setPaying(false);
     setAmount("");
   };
 
   return (
-    <Card className="max-w-md mx-auto">
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Stacks (STX) Payment</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {!walletConnected ? (
           <div className="flex flex-col items-center gap-4">
-            <ConnectWalletButton
-              key={connectKey}
-              onConnect={handleConnectWallet}
-            />
+            <Button
+              onClick={handleConnectWallet}
+              disabled={connecting}
+              variant="default"
+            >
+              {connecting ? "Connecting..." : "Connect Wallet (Stacks)"}
+            </Button>
             <p className="text-xs text-muted-foreground text-center">
               Connect your Stacks wallet to sponsor with STX (Testnet).
             </p>

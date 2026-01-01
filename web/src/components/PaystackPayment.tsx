@@ -48,21 +48,30 @@ const PaystackPayment: React.FC = () => {
   };
 
   return (
-    <div className="grid gap-10 max-w-md mx-auto">
-      <section className="space-y-4">
+    <div className="space-y-8 max-w-4xl mx-auto">
+      <section className="space-y-6">
         <h2 className="text-xl font-semibold">Select a Tier</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PAYSTACK_TIERS.map((tier) => (
-            <Button
+            <button
               key={tier}
               type="button"
-              variant={selectedTier === tier ? "default" : "outline"}
-              className={selectedTier === tier ? "ring-2 ring-primary/50" : ""}
+              className={`p-6 border rounded-lg text-left transition-all hover:border-primary/50 ${
+                selectedTier === tier
+                  ? "border-primary bg-primary/5"
+                  : "border-border"
+              }`}
               onClick={() => handleTierSelect(tier)}
             >
-              {CURRENCY_SYMBOL}
-              {tier.toLocaleString()}
-            </Button>
+              <div className="text-2xl font-bold mb-3">
+                {CURRENCY_SYMBOL}
+                {tier.toLocaleString()}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Support impact logistics with a {CURRENCY_SYMBOL}
+                {tier.toLocaleString()} donation.
+              </p>
+            </button>
           ))}
         </div>
         <div className="space-y-2">
@@ -75,13 +84,14 @@ const PaystackPayment: React.FC = () => {
             placeholder="Enter amount in NGN"
             value={customAmount}
             onChange={(e) => handleCustomAmountChange(e.target.value)}
+            className="w-full"
           />
           <p className="text-xs text-muted-foreground">
             Stored internally as {amount * 100} kobo.
           </p>
         </div>
       </section>
-      <section className="space-y-4">
+      <section className="space-y-6">
         <h2 className="text-xl font-semibold">Donor Info</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -103,10 +113,9 @@ const PaystackPayment: React.FC = () => {
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-4">
           <Button
             type="button"
-            variant="default"
             onClick={handlePay}
             disabled={
               !paystackReady ||
@@ -115,12 +124,12 @@ const PaystackPayment: React.FC = () => {
               amount < 100 ||
               processing
             }
-            className="min-w-[160px]"
+            className="w-fit bg-orange-700 hover:bg-orange-800 text-white"
           >
             {processing
               ? "Processing..."
               : amount > 0
-              ? `Donate ${CURRENCY_SYMBOL}${amount.toLocaleString()}`
+              ? `Donate (${CURRENCY_SYMBOL})`
               : `Donate (${CURRENCY_SYMBOL})`}
           </Button>
           {!paystackReady && (
