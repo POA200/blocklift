@@ -61,12 +61,26 @@ const checkAuth = (req, res, next) => {
  * Destination: ./uploads/gallery for local dev, /var/data/uploads/gallery for production
  * Filename: timestamp + original extension to prevent conflicts
  */
-const uploadDir = process.env.NODE_ENV === 'production'
-    ? '/var/data/uploads/gallery'
+const productionBaseDir = process.env.UPLOADS_BASE_PATH || '/var/data/uploads';
+// Resolve upload directory with a safe fallback in production
+let uploadDir = process.env.NODE_ENV === 'production'
+    ? path_1.default.join(productionBaseDir, 'gallery')
     : path_1.default.join(__dirname, '../../uploads/gallery');
-// Ensure upload directory exists
-if (!fs_1.default.existsSync(uploadDir)) {
+try {
     fs_1.default.mkdirSync(uploadDir, { recursive: true });
+}
+catch (error) {
+    console.error('Failed to create upload directory:', uploadDir, error);
+    if (process.env.NODE_ENV === 'production') {
+        // Fallback to /tmp to keep service running (not persistent!)
+        const fallbackDir = '/tmp/uploads/gallery';
+        console.warn('Falling back to non-persistent path', fallbackDir, '. Attach a Render Disk at /var/data or set UPLOADS_BASE_PATH to a writable mount.');
+        uploadDir = fallbackDir;
+        fs_1.default.mkdirSync(uploadDir, { recursive: true });
+    }
+    else {
+        throw error;
+    }
 }
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {

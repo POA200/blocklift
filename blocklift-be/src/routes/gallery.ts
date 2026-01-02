@@ -64,15 +64,27 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
 // ============================================
 /**
  * Storage configuration for file uploads.
- * Destination: ./uploads/gallery for local dev, /var/data/uploads/gallery for production
+ * Defaults to Render's tmp dir when no disk is attached; override with UPLOADS_BASE_PATH.
  * Filename: timestamp + original extension to prevent conflicts
  */
-const uploadDir = process.env.NODE_ENV === 'production' 
-	? '/var/data/uploads/gallery' 
-	: path.join(__dirname, '../../uploads/gallery');
+const defaultBaseDir =
+	process.env.UPLOADS_BASE_PATH ||
+	(process.env.RENDER ? '/opt/render/project/tmp/uploads' : path.join(__dirname, '../../uploads'));
 
-// Ensure upload directory exists
-if (!fs.existsSync(uploadDir)) {
+let uploadDir = path.join(defaultBaseDir, 'gallery');
+
+try {
+	fs.mkdirSync(uploadDir, { recursive: true });
+} catch (error) {
+	console.error('Failed to create upload directory:', uploadDir, error);
+	// Fallback keeps service running on free tier (ephemeral storage)
+	const fallbackDir = '/tmp/uploads/gallery';
+	console.warn(
+		'Falling back to non-persistent path',
+		fallbackDir,
+		'. Set UPLOADS_BASE_PATH to a writable mount (e.g., /var/data/uploads when a Render Disk is attached).'
+	);
+	uploadDir = fallbackDir;
 	fs.mkdirSync(uploadDir, { recursive: true });
 }
 

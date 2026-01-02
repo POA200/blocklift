@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import ambassadorRouter from './routes/ambassador';
 import paymentsRouter from './routes/payments';
 import galleryRouter from './routes/gallery';
@@ -30,11 +31,28 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve uploaded files from persistent storage
+// Serve uploaded files from writable storage
 // This makes files accessible at: http://localhost:3000/uploads/gallery/filename.jpg
-const uploadsPath = process.env.NODE_ENV === 'production'
-	? '/var/data/uploads'
-	: path.join(__dirname, '../uploads');
+const defaultBaseDir =
+    process.env.UPLOADS_BASE_PATH ||
+    (process.env.RENDER ? '/opt/render/project/tmp/uploads' : path.join(__dirname, '../uploads'));
+
+let uploadsPath = defaultBaseDir;
+
+try {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+} catch (error) {
+    console.error('Failed to create uploads base directory:', uploadsPath, error);
+    const fallbackDir = '/tmp/uploads';
+    console.warn(
+        'Falling back to non-persistent path',
+        fallbackDir,
+        '. Set UPLOADS_BASE_PATH to a writable mount (e.g., /var/data/uploads when a Render Disk is attached).'
+    );
+    uploadsPath = fallbackDir;
+    fs.mkdirSync(uploadsPath, { recursive: true });
+}
+
 app.use('/uploads', express.static(uploadsPath)); 
 
 // Basic health check route

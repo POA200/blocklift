@@ -7,6 +7,7 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const ambassador_1 = __importDefault(require("./routes/ambassador"));
 const payments_1 = __importDefault(require("./routes/payments"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
@@ -31,9 +32,25 @@ app.use((req, res, next) => {
 });
 // Serve uploaded files from persistent storage
 // This makes files accessible at: http://localhost:3000/uploads/gallery/filename.jpg
-const uploadsPath = process.env.NODE_ENV === 'production'
-    ? '/var/data/uploads'
+const productionBaseDir = process.env.UPLOADS_BASE_PATH || '/var/data/uploads';
+let uploadsPath = process.env.NODE_ENV === 'production'
+    ? productionBaseDir
     : path_1.default.join(__dirname, '../uploads');
+try {
+    fs_1.default.mkdirSync(uploadsPath, { recursive: true });
+}
+catch (error) {
+    console.error('Failed to create uploads base directory:', uploadsPath, error);
+    if (process.env.NODE_ENV === 'production') {
+        const fallbackDir = '/tmp/uploads';
+        console.warn('Falling back to non-persistent path', fallbackDir, '. Attach a Render Disk at /var/data or set UPLOADS_BASE_PATH to a writable mount.');
+        uploadsPath = fallbackDir;
+        fs_1.default.mkdirSync(uploadsPath, { recursive: true });
+    }
+    else {
+        throw error;
+    }
+}
 app.use('/uploads', express_1.default.static(uploadsPath));
 // Basic health check route
 app.get('/api/health', (req, res) => {
