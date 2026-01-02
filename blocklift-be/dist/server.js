@@ -11,6 +11,7 @@ const fs_1 = __importDefault(require("fs"));
 const ambassador_1 = __importDefault(require("./routes/ambassador"));
 const payments_1 = __importDefault(require("./routes/payments"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
+const videos_1 = __importDefault(require("./routes/videos"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
@@ -30,26 +31,20 @@ app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
     next();
 });
-// Serve uploaded files from persistent storage
+// Serve uploaded files from writable storage
 // This makes files accessible at: http://localhost:3000/uploads/gallery/filename.jpg
-const productionBaseDir = process.env.UPLOADS_BASE_PATH || '/var/data/uploads';
-let uploadsPath = process.env.NODE_ENV === 'production'
-    ? productionBaseDir
-    : path_1.default.join(__dirname, '../uploads');
+const defaultBaseDir = process.env.UPLOADS_BASE_PATH ||
+    (process.env.RENDER ? '/opt/render/project/tmp/uploads' : path_1.default.join(__dirname, '../uploads'));
+let uploadsPath = defaultBaseDir;
 try {
     fs_1.default.mkdirSync(uploadsPath, { recursive: true });
 }
 catch (error) {
     console.error('Failed to create uploads base directory:', uploadsPath, error);
-    if (process.env.NODE_ENV === 'production') {
-        const fallbackDir = '/tmp/uploads';
-        console.warn('Falling back to non-persistent path', fallbackDir, '. Attach a Render Disk at /var/data or set UPLOADS_BASE_PATH to a writable mount.');
-        uploadsPath = fallbackDir;
-        fs_1.default.mkdirSync(uploadsPath, { recursive: true });
-    }
-    else {
-        throw error;
-    }
+    const fallbackDir = '/tmp/uploads';
+    console.warn('Falling back to non-persistent path', fallbackDir, '. Set UPLOADS_BASE_PATH to a writable mount (e.g., /var/data/uploads when a Render Disk is attached).');
+    uploadsPath = fallbackDir;
+    fs_1.default.mkdirSync(uploadsPath, { recursive: true });
 }
 app.use('/uploads', express_1.default.static(uploadsPath));
 // Basic health check route
@@ -60,6 +55,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/ambassador', ambassador_1.default);
 app.use('/api/payments', payments_1.default);
 app.use('/api/gallery', gallery_1.default);
+app.use('/api/videos', videos_1.default);
 // Not found handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Not Found', path: req.originalUrl });

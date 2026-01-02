@@ -71,6 +71,8 @@ This is crucial for file uploads!
    - **Size:** 1 GB (free tier, can upgrade later)
 4. Click **"Create Disk"**
 
+**If you stay on the free tier without a disk:** uploads are written to Render's tmp path (`/opt/render/project/tmp/uploads`) and are not persistent. To use a disk later, attach it and set `UPLOADS_BASE_PATH=/var/data/uploads` in the service env, then redeploy.
+
 ### 6. Deploy
 
 1. Click **"Manual Deploy"** → **"Deploy latest commit"**

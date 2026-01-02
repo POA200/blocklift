@@ -58,29 +58,22 @@ const checkAuth = (req, res, next) => {
 // ============================================
 /**
  * Storage configuration for file uploads.
- * Destination: ./uploads/gallery for local dev, /var/data/uploads/gallery for production
+ * Defaults to Render's tmp dir when no disk is attached; override with UPLOADS_BASE_PATH.
  * Filename: timestamp + original extension to prevent conflicts
  */
-const productionBaseDir = process.env.UPLOADS_BASE_PATH || '/var/data/uploads';
-// Resolve upload directory with a safe fallback in production
-let uploadDir = process.env.NODE_ENV === 'production'
-    ? path_1.default.join(productionBaseDir, 'gallery')
-    : path_1.default.join(__dirname, '../../uploads/gallery');
+const defaultBaseDir = process.env.UPLOADS_BASE_PATH ||
+    (process.env.RENDER ? '/opt/render/project/tmp/uploads' : path_1.default.join(__dirname, '../../uploads'));
+let uploadDir = path_1.default.join(defaultBaseDir, 'gallery');
 try {
     fs_1.default.mkdirSync(uploadDir, { recursive: true });
 }
 catch (error) {
     console.error('Failed to create upload directory:', uploadDir, error);
-    if (process.env.NODE_ENV === 'production') {
-        // Fallback to /tmp to keep service running (not persistent!)
-        const fallbackDir = '/tmp/uploads/gallery';
-        console.warn('Falling back to non-persistent path', fallbackDir, '. Attach a Render Disk at /var/data or set UPLOADS_BASE_PATH to a writable mount.');
-        uploadDir = fallbackDir;
-        fs_1.default.mkdirSync(uploadDir, { recursive: true });
-    }
-    else {
-        throw error;
-    }
+    // Fallback keeps service running on free tier (ephemeral storage)
+    const fallbackDir = '/tmp/uploads/gallery';
+    console.warn('Falling back to non-persistent path', fallbackDir, '. Set UPLOADS_BASE_PATH to a writable mount (e.g., /var/data/uploads when a Render Disk is attached).');
+    uploadDir = fallbackDir;
+    fs_1.default.mkdirSync(uploadDir, { recursive: true });
 }
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
