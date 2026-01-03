@@ -11,13 +11,14 @@ const fs_1 = __importDefault(require("fs"));
 const ambassador_1 = __importDefault(require("./routes/ambassador"));
 const payments_1 = __importDefault(require("./routes/payments"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
-const videos_1 = __importDefault(require("./routes/videos"));
+const education_1 = __importDefault(require("./routes/education"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Update CORS to allow your frontend URL
 const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',
     'https://www.blocklift.org',
     process.env.FRONTEND_URL, // Add your Vercel frontend URL here
 ].filter((origin) => Boolean(origin));
@@ -55,7 +56,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/ambassador', ambassador_1.default);
 app.use('/api/payments', payments_1.default);
 app.use('/api/gallery', gallery_1.default);
-app.use('/api/videos', videos_1.default);
+app.use('/api/education', education_1.default);
 // Not found handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Not Found', path: req.originalUrl });

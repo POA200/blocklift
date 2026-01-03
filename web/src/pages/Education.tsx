@@ -1,76 +1,190 @@
-import SimpleHeader from '@/components/simple-header'
-import SimpleFooter from '@/components/simple-footer'
-import { useMemo, useState } from 'react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import ReactMarkdown from 'react-markdown'
-import Seo from '@/components/Seo'
-
-// Import sample markdown content (Vite raw imports)
-import basicsLedgerMd from '@/content/education/basics/what-is-decentralized-ledger.md?raw'
-import basicsHistoryMd from '@/content/education/basics/history-of-bitcoin.md?raw'
-import stacksSecuredMd from '@/content/education/stacks/secured-by-bitcoin.md?raw'
-import clarityIntroMd from '@/content/education/clarity/introduction-to-clarity.md?raw'
-import clarityFtMd from '@/content/education/clarity/first-fungible-token.md?raw'
-import blockliftNftMd from '@/content/education/blocklift/nft-proof-of-impact.md?raw'
+import SimpleHeader from "@/components/simple-header";
+import SimpleFooter from "@/components/simple-footer";
+import { useMemo, useState, useEffect } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import ReactMarkdown from "react-markdown";
+import Seo from "@/components/Seo";
+import ArticleUploadDialog from "@/components/sections/core/ArticleUploadDialog";
 
 // Types for scalable content structure
 interface EducationItem {
-  id: string
-  title: string
-  summary: string
-  category: 'Bitcoin/Web3 Basics' | 'Stacks Layer 2' | 'Clarity Smart Contracts' | 'BlockLift Technology'
-  type: 'article' | 'video' | 'code'
-  // For future integration: path to markdown or video URL
-  sourceId?: string
-}
-
-const ITEMS: EducationItem[] = [
-  { id: 'basics-ledger', title: 'What is a Decentralized Ledger?', summary: 'Understand the foundations of blockchain data and consensus.', category: 'Bitcoin/Web3 Basics', type: 'article', sourceId: 'basics-ledger' },
-  { id: 'basics-history', title: 'The History of Bitcoin', summary: 'From the whitepaper to global adoption and sound money debates.', category: 'Bitcoin/Web3 Basics', type: 'article', sourceId: 'basics-history' },
-
-  { id: 'stacks-secured', title: 'Why Stacks is Secured by Bitcoin', summary: 'Learn how the Stacks layer leverages Bitcoin’s security guarantees.', category: 'Stacks Layer 2', type: 'article', sourceId: 'stacks-secured' },
-  { id: 'stx-token', title: 'The STX Token Explained', summary: 'Utility, governance, and network incentives in the Stacks ecosystem.', category: 'Stacks Layer 2', type: 'article' },
-
-  { id: 'clarity-intro', title: 'Introduction to Clarity', summary: 'A decidable smart contract language designed for security.', category: 'Clarity Smart Contracts', type: 'article', sourceId: 'clarity-intro' },
-  { id: 'clarity-ft', title: 'Writing Your First Fungible Token (FT)', summary: 'Step-by-step to author and deploy a basic FT contract.', category: 'Clarity Smart Contracts', type: 'code', sourceId: 'clarity-ft' },
-
-  { id: 'blocklift-nft-proof', title: 'How Our NFT Proof of Impact Works', summary: 'Traceable, verifiable impact artifacts on chain.', category: 'BlockLift Technology', type: 'article', sourceId: 'blocklift-nft-proof' },
-  { id: 'boom-wallet', title: 'Using the Boom Wallet', summary: 'Wallet workflows and tips for BlockLift participants.', category: 'BlockLift Technology', type: 'video' },
-]
-
-const MD_BY_ID: Record<string, string> = {
-  'basics-ledger': basicsLedgerMd,
-  'basics-history': basicsHistoryMd,
-  'stacks-secured': stacksSecuredMd,
-  'clarity-intro': clarityIntroMd,
-  'clarity-ft': clarityFtMd,
-  'blocklift-nft-proof': blockliftNftMd,
+  id: string;
+  title: string;
+  summary: string;
+  category:
+    | "Bitcoin/Web3 Basics"
+    | "Stacks Layer 2"
+    | "Clarity Smart Contracts"
+    | "BlockLift Technology";
+  type: "article" | "video" | "code";
+  sourceId?: string;
+  content?: string;
+  videoUrl?: string;
+  codeSnippet?: string;
 }
 
 const CATEGORIES = [
-  'Bitcoin/Web3 Basics',
-  'Stacks Layer 2',
-  'Clarity Smart Contracts',
-  'BlockLift Technology',
-] as const
+  "Bitcoin/Web3 Basics",
+  "Stacks Layer 2",
+  "Clarity Smart Contracts",
+  "BlockLift Technology",
+] as const;
 
-type Category = typeof CATEGORIES[number]
+type Category = (typeof CATEGORIES)[number];
 
 export default function Education() {
-  const [query, setQuery] = useState('')
-  const [active, setActive] = useState<Category | 'All'>('All')
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState<Category | "All">("All");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [items, setItems] = useState<EducationItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<EducationItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteTokenInput, setDeleteTokenInput] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+    null
+  );
+
+  // Function to fetch items (reusable)
+  const fetchItems = async () => {
+    try {
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+      console.log("Fetching from:", `${backendUrl}/api/education/items`);
+      const response = await fetch(`${backendUrl}/api/education/items`);
+      console.log("Response status:", response.status);
+      const data = await response.json();
+      console.log("Response data:", data);
+
+      if (data.success) {
+        setItems(data.items);
+        console.log("Items set:", data.items.length);
+      }
+    } catch (error) {
+      console.error("Error fetching education items:", error);
+    }
+  };
+
+  // Delete an education item
+  const handleDeleteItem = async (e: React.MouseEvent, itemId: string) => {
+    e.stopPropagation();
+    setShowDeleteConfirm(itemId);
+    setDeleteTokenInput("");
+    setDeleteError(null);
+  };
+
+  const confirmDelete = async (itemId: string) => {
+    if (!deleteTokenInput.trim()) {
+      setDeleteError("Please enter the upload token");
+      return;
+    }
+
+    setDeleting(itemId);
+    setDeleteError(null);
+    try {
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+      const response = await fetch(
+        `${backendUrl}/api/education/items/${itemId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${deleteTokenInput}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setItems(items.filter((item) => item.id !== itemId));
+        if (selectedId === itemId) {
+          setSelectedId(null);
+        }
+        setShowDeleteConfirm(null);
+        setDeleteTokenInput("");
+      } else {
+        setDeleteError(
+          data.message || "Failed to delete article. Please check the token."
+        );
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      setDeleteError("Error deleting article");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  // Fetch education items on mount
+  useEffect(() => {
+    const loadItems = async () => {
+      setLoading(true);
+      await fetchItems();
+      setLoading(false);
+    };
+
+    loadItems();
+  }, []);
+
+  // Fetch full content when item is selected
+  useEffect(() => {
+    const fetchItemDetail = async () => {
+      if (!selectedId) {
+        setSelectedItem(null);
+        return;
+      }
+
+      setLoadingDetail(true);
+      try {
+        const backendUrl =
+          import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        const response = await fetch(
+          `${backendUrl}/api/education/items/${selectedId}`
+        );
+        const data = await response.json();
+
+        if (data.success) {
+          setSelectedItem(data.item);
+        }
+      } catch (error) {
+        console.error("Error fetching education item detail:", error);
+      } finally {
+        setLoadingDetail(false);
+      }
+    };
+
+    fetchItemDetail();
+  }, [selectedId]);
 
   const filtered = useMemo(() => {
-    const base = active === 'All' ? ITEMS : ITEMS.filter(i => i.category === active)
-    if (!query.trim()) return base
-    const q = query.toLowerCase()
-    return base.filter(i => i.title.toLowerCase().includes(q) || i.summary.toLowerCase().includes(q))
-  }, [active, query])
-
-  const selected = useMemo(() => ITEMS.find(i => i.id === selectedId) || null, [selectedId])
+    const base =
+      active === "All" ? items : items.filter((i) => i.category === active);
+    if (!query.trim()) return base;
+    const q = query.toLowerCase();
+    return base.filter(
+      (i) =>
+        i.title.toLowerCase().includes(q) || i.summary.toLowerCase().includes(q)
+    );
+  }, [active, query, items]);
 
   return (
     <div>
@@ -82,18 +196,41 @@ export default function Education() {
       <main className="max-w-7xl mx-auto px-6 py-16">
         {/* Section 1: Overview + Filters/Search */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Education Portal</h1>
-          <p className="text-sm text-muted-foreground mb-6">Explore curated resources on Bitcoin, Stacks, Clarity, and BlockLift tech. Filter by category or search by keyword.</p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                Education Portal
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Explore curated resources on Bitcoin, Stacks, Clarity, and
+                BlockLift tech. Filter by category or search by keyword.
+              </p>
+            </div>
+            <ArticleUploadDialog onArticleAdded={fetchItems} />
+          </div>
 
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <Button variant={active === 'All' ? 'default' : 'outline'} onClick={() => setActive('All')}>All</Button>
-            {CATEGORIES.map(cat => (
-              <Button key={cat} variant={active === cat ? 'default' : 'outline'} onClick={() => setActive(cat)}>
+            <Button
+              variant={active === "All" ? "default" : "outline"}
+              onClick={() => setActive("All")}
+            >
+              All
+            </Button>
+            {CATEGORIES.map((cat) => (
+              <Button
+                key={cat}
+                variant={active === cat ? "default" : "outline"}
+                onClick={() => setActive(cat)}
+              >
                 {cat}
               </Button>
             ))}
             <div className="ml-auto w-full sm:w-72">
-              <Input placeholder="Search topics..." value={query} onChange={(e) => setQuery(e.target.value)} />
+              <Input
+                placeholder="Search topics..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
             </div>
           </div>
         </div>
@@ -101,66 +238,124 @@ export default function Education() {
         {/* Two-column layout: list on left, content on right */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1 space-y-4">
-            {filtered.map(item => (
-              <Card key={item.id} className="border border-[var(--border)] bg-[var(--surface)] cursor-pointer" onClick={() => setSelectedId(item.id)}>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center justify-between">
-                    <span>{item.title}</span>
-                    <span className="text-xs font-medium text-primary">{item.type.toUpperCase()}</span>
-                  </CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground">{item.category}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{item.summary}</p>
-                </CardContent>
-              </Card>
-            ))}
-            {filtered.length === 0 && (
-              <p className="text-sm text-muted-foreground">No topics match your search.</p>
+            {loading ? (
+              <p className="text-sm text-muted-foreground">
+                Loading education content...
+              </p>
+            ) : (
+              <>
+                {filtered.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="border border-[var(--border)] bg-[var(--surface)] cursor-pointer hover:bg-[var(--surface)]/80 transition-colors"
+                    onClick={() => setSelectedId(item.id)}
+                  >
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-base flex items-start justify-between gap-2">
+                        <span className="flex-1">{item.title}</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs font-medium text-primary whitespace-nowrap">
+                            {item.type.toUpperCase()}
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => handleDeleteItem(e, item.id)}
+                            disabled={deleting === item.id}
+                          >
+                            {deleting === item.id ? "..." : "✕"}
+                          </Button>
+                        </div>
+                      </CardTitle>
+                      <CardDescription className="text-xs text-muted-foreground">
+                        {item.category}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <p className="text-sm text-muted-foreground">
+                        {item.summary}
+                      </p>
+                      {deleteError && selectedId === item.id && (
+                        <p className="text-xs text-red-500 mt-2">
+                          {deleteError}
+                        </p>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+                {filtered.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    No topics match your search.
+                  </p>
+                )}
+              </>
             )}
           </div>
 
           <div className="lg:col-span-2">
-            {!selected && (
+            {!selectedItem && !loadingDetail && (
               <Card className="border border-primary/40 bg-[var(--surface)]">
                 <CardHeader>
                   <CardTitle>Welcome to the Education Hub</CardTitle>
-                  <CardDescription className="text-sm">Select a topic from the left to view details here.</CardDescription>
+                  <CardDescription className="text-sm">
+                    Select a topic from the left to view details here.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-muted-foreground">This space will render rich content: articles (Markdown), videos, and code examples. For the MVP, content is summarized. In the next iteration, we’ll store Markdown files and render them via <code>react-markdown</code>.</p>
+                  <p className="text-sm text-muted-foreground">
+                    This space will render rich content: articles (Markdown),
+                    videos, and code examples.
+                  </p>
                 </CardContent>
               </Card>
             )}
 
-            {selected && (
+            {loadingDetail && (
+              <Card className="border border-[var(--border)] bg-[var(--surface)]">
+                <CardContent className="py-16 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Loading content...
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {selectedItem && !loadingDetail && (
               <Card className="border border-[var(--border)] bg-[var(--surface)]">
                 <CardHeader>
-                  <CardTitle>{selected.title}</CardTitle>
-                  <CardDescription className="text-xs text-muted-foreground">{selected.category} · {selected.type.toUpperCase()}</CardDescription>
+                  <CardTitle>{selectedItem.title}</CardTitle>
+                  <CardDescription className="text-xs text-muted-foreground">
+                    {selectedItem.category} · {selectedItem.type.toUpperCase()}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {selected.type === 'video' && (
+                  {selectedItem.type === "video" && (
                     <div className="aspect-video rounded-md overflow-hidden border border-[var(--border)] bg-black/5 mb-4 flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">Video placeholder</span>
+                      <span className="text-xs text-muted-foreground">
+                        Video placeholder
+                      </span>
                     </div>
                   )}
-                  {selected.type === 'code' && (
+                  {selectedItem.type === "code" && (
                     <pre className="text-xs p-4 rounded-md border border-[var(--border)] bg-background overflow-auto mb-4">
-{`;; Clarity FT skeleton (placeholder)\n(define-fungible-token token-name)\n(define-public (transfer (amount uint) (sender principal) (recipient principal))\n  (ok true))`}
+                      {`;; Clarity FT skeleton (placeholder)\n(define-fungible-token token-name)\n(define-public (transfer (amount uint) (sender principal) (recipient principal))\n  (ok true))`}
                     </pre>
                   )}
-                  {selected.type === 'article' && (
+                  {selectedItem.type === "article" && selectedItem.content && (
                     <div className="prose prose-invert max-w-none text-foreground">
-                      <ReactMarkdown>
-                        {MD_BY_ID[selected.sourceId || ''] || selected.summary}
-                      </ReactMarkdown>
+                      <ReactMarkdown>{selectedItem.content}</ReactMarkdown>
                     </div>
                   )}
-                  {selected.type !== 'article' && (
-                    <p className="text-sm text-foreground">
-                      {selected.summary} This is placeholder content. In a future version, this area will render Markdown or embed media from the item’s source.
-                    </p>
+                  {selectedItem.type === "code" && selectedItem.codeSnippet && (
+                    <pre className="text-xs p-4 rounded-md border border-[var(--border)] bg-background overflow-auto mb-4">
+                      {selectedItem.codeSnippet}
+                    </pre>
+                  )}
+                  {selectedItem.type === "video" && selectedItem.content && (
+                    <div className="prose prose-invert max-w-none text-foreground">
+                      <ReactMarkdown>{selectedItem.content}</ReactMarkdown>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -168,7 +363,72 @@ export default function Education() {
           </div>
         </div>
       </main>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteConfirm !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowDeleteConfirm(null);
+            setDeleteTokenInput("");
+            setDeleteError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md bg-background border-[var(--border)]">
+          <DialogHeader>
+            <DialogTitle>Delete Article</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this article? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="deleteToken"
+                className="block text-sm font-medium text-foreground"
+              >
+                Upload Token *
+              </label>
+              <Input
+                id="deleteToken"
+                type="password"
+                placeholder="Enter upload token"
+                value={deleteTokenInput}
+                onChange={(e) => setDeleteTokenInput(e.target.value)}
+                className="bg-[var(--surface)] border-[var(--border)]"
+              />
+            </div>
+            {deleteError && (
+              <p className="text-sm text-red-500">{deleteError}</p>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteConfirm(null);
+                  setDeleteTokenInput("");
+                  setDeleteError(null);
+                }}
+                disabled={deleting !== null}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => confirmDelete(showDeleteConfirm!)}
+                disabled={deleting !== null || !deleteTokenInput.trim()}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {deleting === showDeleteConfirm ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <SimpleFooter />
     </div>
-  )
+  );
 }

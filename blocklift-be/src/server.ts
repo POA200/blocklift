@@ -6,6 +6,7 @@ import fs from 'fs';
 import ambassadorRouter from './routes/ambassador';
 import paymentsRouter from './routes/payments';
 import galleryRouter from './routes/gallery';
+import educationRouter from './routes/education';
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 // Update CORS to allow your frontend URL
 const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',
     'https://www.blocklift.org',
     process.env.FRONTEND_URL, // Add your Vercel frontend URL here
 ].filter((origin): origin is string => Boolean(origin));
@@ -64,6 +66,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/ambassador', ambassadorRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/gallery', galleryRouter);
+app.use('/api/education', educationRouter);
 
 // Not found handler
 app.use((req: Request, res: Response) => {
