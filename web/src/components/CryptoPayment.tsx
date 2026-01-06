@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut } from "lucide-react";
+import { LogOut, CheckCircle, X, Copy, Check } from "lucide-react";
 
 const CryptoPayment: React.FC = () => {
   const [walletConnected, setWalletConnected] = useState(false);
@@ -21,6 +21,8 @@ const CryptoPayment: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [paying, setPaying] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [successTxId, setSuccessTxId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const RECEIVER_ADDRESS = import.meta.env.VITE_STX_RECEIVER_ADDRESS;
 
   // Check if already connected on mount
@@ -158,94 +160,222 @@ const CryptoPayment: React.FC = () => {
       });
 
       console.log("Transaction ID:", response.txid);
-      // Optionally show success message
+      if (response.txid) {
+        setSuccessTxId(response.txid);
+      }
+      setAmount("");
     } catch (e) {
       console.error("Transaction failed:", e);
       setError("Transaction failed. Please try again.");
     }
     setPaying(false);
-    setAmount("");
+  };
+
+  const closeSuccessModal = () => {
+    setSuccessTxId(null);
+  };
+
+  const getExplorerUrl = (txId: string) => {
+    return `https://testnet.explorer.stacks.co/txid/${txId}?chain=testnet`;
+  };
+
+  const handleCopyAddress = () => {
+    if (RECEIVER_ADDRESS) {
+      navigator.clipboard.writeText(RECEIVER_ADDRESS);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
-    <Card className="max-w-4xl mx-auto">
-      <CardHeader>
-        <CardTitle>Stacks (STX) Payment</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {!walletConnected ? (
-          <div className="flex flex-col items-center gap-4">
-            <Button
-              onClick={handleConnectWallet}
-              disabled={connecting}
-              variant="default"
-            >
-              {connecting ? "Connecting..." : "Connect Wallet (Stacks)"}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              Connect your Stacks wallet to sponsor with STX (Testnet).
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-mono text-xs break-all">
-                {walletAddress
-                  ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-                  : ""}
-              </span>
+    <>
+      <Card className="max-w-4xl mx-auto bg-background">
+        <CardHeader>
+          <CardTitle>Stacks (STX) Payment</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {!walletConnected ? (
+            <div className="flex flex-col items-center gap-6">
+              {/* Receiver Address Section */}
+              <div className="w-full space-y-3">
+                <p className="text-sm text-muted-foreground text-center">
+                  Send STX directly from your wallet
+                </p>
+                <div className="flex items-center gap-2 bg-background p-3 rounded border border-input">
+                  <input
+                    type="text"
+                    value={RECEIVER_ADDRESS}
+                    readOnly
+                    className="flex-1 bg-transparent text-xs font-mono truncate outline-none"
+                  />
+                  <button
+                    onClick={handleCopyAddress}
+                    className="p-2 hover:bg-background rounded transition-colors flex-shrink-0"
+                    title="Copy address"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <Copy className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="w-full border-t" />
+
+              <div className="flex flex-col items-center gap-4 w-full">
+                <p className="text-sm text-muted-foreground text-center">
+                  Or connect your wallet for a seamless experience
+                </p>
+                <Button
+                  onClick={handleConnectWallet}
+                  disabled={connecting}
+                  variant="default"
+                >
+                  {connecting ? "Connecting..." : "Connect Wallet (Stacks)"}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs break-all">
+                  {walletAddress
+                    ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(
+                        -4
+                      )}`
+                    : ""}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDisconnectWallet}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Disconnect
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-medium">Wallet Balance:</span>
+                <span className="font-mono">
+                  {balance !== undefined ? `${balance} STX` : "..."}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  Amount to Sponsor (STX)
+                </label>
+                <Input
+                  type="number"
+                  min={0.01}
+                  step={0.01}
+                  placeholder="Enter amount in STX"
+                  value={amount}
+                  onChange={(e) => handleAmountChange(e.target.value)}
+                  disabled={paying}
+                />
+                {error && (
+                  <div className="text-xs text-destructive mt-1">{error}</div>
+                )}
+              </div>
               <Button
-                size="sm"
-                variant="outline"
-                onClick={handleDisconnectWallet}
+                type="button"
+                variant="default"
+                className="w-full"
+                disabled={
+                  paying ||
+                  !amount ||
+                  !!error ||
+                  isNaN(Number(amount)) ||
+                  Number(amount) <= 0 ||
+                  balance === undefined
+                }
+                onClick={handlePay}
               >
-                <LogOut className="mr-2 h-4 w-4" />
-                Disconnect
+                {paying ? "Processing..." : "Pay with STX"}
               </Button>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Wallet Balance:</span>
-              <span className="font-mono">
-                {balance !== undefined ? `${balance} STX` : "..."}
-              </span>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Amount to Sponsor (STX)
-              </label>
-              <Input
-                type="number"
-                min={0.01}
-                step={0.01}
-                placeholder="Enter amount in STX"
-                value={amount}
-                onChange={(e) => handleAmountChange(e.target.value)}
-                disabled={paying}
-              />
-              {error && (
-                <div className="text-xs text-destructive mt-1">{error}</div>
-              )}
-            </div>
-            <Button
-              type="button"
-              variant="default"
-              className="w-full"
-              disabled={
-                paying ||
-                !amount ||
-                !!error ||
-                isNaN(Number(amount)) ||
-                Number(amount) <= 0 ||
-                balance === undefined
-              }
-              onClick={handlePay}
-            >
-              {paying ? "Processing..." : "Pay with STX"}
-            </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Success Modal */}
+      {successTxId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="max-w-md w-full bg-background">
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="flex justify-end w-full -mt-2 -mr-2">
+                  <button
+                    onClick={closeSuccessModal}
+                    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <CheckCircle className="h-16 w-16 text-green-500" />
+
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold text-green-600">
+                    Payment Successful!
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Thank you for your generous donation to Blocklift. Your
+                    contribution helps us make a real impact.
+                  </p>
+                </div>
+
+                <div className="w-full bg-muted p-3 rounded text-left space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Transaction Hash
+                  </p>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs font-mono break-all text-foreground flex-1">
+                      {successTxId}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(successTxId);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="p-1 hover:bg-background rounded transition-colors flex-shrink-0"
+                      title="Copy transaction hash"
+                    >
+                      {copied ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button asChild className="w-full" variant="default">
+                  <a
+                    href={getExplorerUrl(successTxId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View on Stacks Explorer
+                  </a>
+                </Button>
+
+                <Button
+                  onClick={closeSuccessModal}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Close
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </>
   );
 };
 
