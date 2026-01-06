@@ -60,7 +60,10 @@ const CryptoPayment: React.FC = () => {
   // Fetch balance from Stacks API
   const fetchBalance = async (address: string) => {
     try {
-      const url = `https://api.testnet.hiro.so/extended/v1/address/${address}/balances`;
+      // Mainnet API
+      const url = `https://api.hiro.so/extended/v1/address/${address}/balances`;
+      // Testnet API (deprecated)
+      // const url = `https://api.testnet.hiro.so/extended/v1/address/${address}/balances`;
       console.log("Fetching balance from:", url);
 
       const res = await fetch(url);
@@ -176,7 +179,10 @@ const CryptoPayment: React.FC = () => {
   };
 
   const getExplorerUrl = (txId: string) => {
-    return `https://testnet.explorer.stacks.co/txid/${txId}?chain=testnet`;
+    // Mainnet explorer
+    return `https://explorer.stacks.co/txid/${txId}?chain=mainnet`;
+    // Testnet explorer (deprecated)
+    // return `https://testnet.explorer.stacks.co/txid/${txId}?chain=testnet`;
   };
 
   const handleCopyAddress = () => {
