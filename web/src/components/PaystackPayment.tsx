@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { CheckCircle, X } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 const PAYSTACK_TIERS = [5000, 10000, 50000];
 const CURRENCY_SYMBOL = "₦";
+
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
 
 const PaystackPayment: React.FC = () => {
   const [amount, setAmount] = useState(0);
@@ -12,12 +20,33 @@ const PaystackPayment: React.FC = () => {
   const [donorEmail, setDonorEmail] = useState("");
   const [donorName, setDonorName] = useState("");
   const [processing, setProcessing] = useState(false);
-  const [paystackReady] = useState(true); // You may want to check env or script
+  const [paystackReady, setPaystackReady] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<
     "idle" | "processing" | "success" | "error"
   >("idle");
   const [finalReference, setFinalReference] = useState("");
   const emailValid = /.+@.+\..+/.test(donorEmail);
+  const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+
+  // Load Paystack script
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    script.async = true;
+    script.onload = () => {
+      setPaystackReady(true);
+      console.log("Paystack script loaded");
+    };
+    script.onerror = () => {
+      console.error("Failed to load Paystack script");
+      setPaystackReady(false);
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const handleTierSelect = (tier: number) => {
     setSelectedTier(tier);
@@ -37,14 +66,53 @@ const PaystackPayment: React.FC = () => {
   };
 
   const handlePay = () => {
-    if (!paystackReady || !emailValid || !donorName || amount < 100) return;
+    if (!paystackReady || !emailValid || !donorName || amount < 100) {
+      console.log("Payment validation failed", {
+        paystackReady,
+        emailValid,
+        donorName,
+        amount,
+      });
+      return;
+    }
+
+    if (!window.PaystackPop) {
+      console.error("Paystack is not loaded");
+      setPaymentStatus("error");
+      return;
+    }
+
     setProcessing(true);
-    // Simulate payment process
-    setTimeout(() => {
-      setFinalReference(Date.now().toString());
-      setPaymentStatus("success");
-      setProcessing(false);
-    }, 1200);
+
+    const handler = window.PaystackPop.setup({
+      key: publicKey,
+      email: donorEmail,
+      amount: amount * 100, // Convert to kobo
+      currency: "NGN",
+      ref: `ref-${Date.now()}`,
+      onClose: () => {
+        console.log("Payment window closed");
+        setProcessing(false);
+        setPaymentStatus("error");
+      },
+      onSuccess: (response: any) => {
+        console.log("Payment successful", response);
+        setFinalReference(response.reference);
+        setPaymentStatus("success");
+        setProcessing(false);
+        // Reset form
+        setTimeout(() => {
+          setAmount(0);
+          setCustomAmount("");
+          setSelectedTier(null);
+          setDonorEmail("");
+          setDonorName("");
+          setPaymentStatus("idle");
+          setFinalReference("");
+        }, 3000);
+      },
+    });
+    handler.openIframe();
   };
 
   return (
@@ -129,7 +197,7 @@ const PaystackPayment: React.FC = () => {
             {processing
               ? "Processing..."
               : amount > 0
-              ? `Donate (${CURRENCY_SYMBOL})`
+              ? `Donate ${CURRENCY_SYMBOL}${amount.toLocaleString()}`
               : `Donate (${CURRENCY_SYMBOL})`}
           </Button>
           {!paystackReady && (
@@ -139,9 +207,50 @@ const PaystackPayment: React.FC = () => {
           )}
         </div>
         {paymentStatus === "success" && (
-          <div className="text-green-500 text-sm mt-2">
-            Donation successful! Reference:{" "}
-            <span className="font-mono">{finalReference}</span>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="max-w-md w-full bg-background">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="flex justify-end w-full -mt-2 -mr-2">
+                    <button
+                      onClick={() => setPaymentStatus("idle")}
+                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  <CheckCircle className="h-16 w-16 text-green-500" />
+
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-semibold text-green-600">
+                      Donation Successful!
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Thank you for your generous donation to Blocklift. Your
+                      contribution helps us make a real impact.
+                    </p>
+                  </div>
+
+                  <div className="w-full bg-muted p-3 rounded text-left space-y-1">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Transaction Reference
+                    </p>
+                    <p className="text-xs font-mono break-all text-foreground">
+                      {finalReference}
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={() => setPaymentStatus("idle")}
+                    className="w-full"
+                    variant="default"
+                  >
+                    Close
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
         {paymentStatus === "error" && (
