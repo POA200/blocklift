@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { STACKS_TESTNET, defaultUrlFromNetwork } from "@stacks/network";
 import {
   connect,
   disconnect,
@@ -22,32 +21,62 @@ const CryptoPayment: React.FC = () => {
   const [error, setError] = useState<string>("");
   const [paying, setPaying] = useState(false);
   const [connecting, setConnecting] = useState(false);
-  const RECEIVER_ADDRESS = "ST2BWMDQ6FFHCRGRP1VCAXHSMYTDY8J0T0G16627R";
+  const RECEIVER_ADDRESS = import.meta.env.VITE_STX_RECEIVER_ADDRESS;
 
   // Check if already connected on mount
   useEffect(() => {
-    if (isConnected()) {
-      const userData = getLocalStorage();
-      if (userData?.addresses?.stx && userData.addresses.stx.length > 0) {
-        const stxAddress = userData.addresses.stx[0].address;
-        setWalletConnected(true);
-        setWalletAddress(stxAddress);
-        fetchBalance(stxAddress);
+    const checkConnection = () => {
+      if (isConnected()) {
+        const userData = getLocalStorage();
+        console.log("User data from localStorage:", userData);
+
+        // Find the STX address from the stored addresses
+        if (userData?.addresses?.stx && userData.addresses.stx.length > 0) {
+          // Find the address object with symbol 'STX' or just use first STX address
+          const stxAddressObj =
+            userData.addresses.stx.find(
+              (addr: any) => addr.symbol === "STX" || !addr.symbol
+            ) || userData.addresses.stx[0];
+
+          console.log("STX address object from storage:", stxAddressObj);
+
+          if (stxAddressObj && stxAddressObj.address) {
+            const stxAddress = stxAddressObj.address;
+            console.log("Extracted address from localStorage:", stxAddress);
+
+            setWalletConnected(true);
+            setWalletAddress(stxAddress);
+            fetchBalance(stxAddress);
+          }
+        }
       }
-    }
+    };
+
+    checkConnection();
   }, []);
 
   // Fetch balance from Stacks API
   const fetchBalance = async (address: string) => {
     try {
-      const url = `${defaultUrlFromNetwork(
-        STACKS_TESTNET
-      )}/extended/v1/address/${address}/balances`;
+      const url = `https://api.testnet.hiro.so/extended/v1/address/${address}/balances`;
+      console.log("Fetching balance from:", url);
+
       const res = await fetch(url);
+
+      if (!res.ok) {
+        console.error("Balance fetch failed:", res.status, res.statusText);
+        setBalance(undefined);
+        return;
+      }
+
       const data = await res.json();
+      console.log("Balance data:", data);
+
       // STX balance is in microstacks
-      setBalance(Number(data.stx.balance) / 1e6);
+      const stxBalance = Number(data.stx.balance) / 1e6;
+      setBalance(stxBalance);
     } catch (e) {
+      console.error("Error fetching balance:", e);
       setBalance(undefined);
     }
   };
@@ -61,11 +90,30 @@ const CryptoPayment: React.FC = () => {
     setConnecting(true);
     try {
       const response = await connect();
+      console.log("Connect response:", response);
+      console.log("Addresses array:", response.addresses);
+
+      // Find the STX address from the addresses array
       if (response.addresses && response.addresses.length > 0) {
-        const stxAddress = response.addresses[0].address;
-        setWalletConnected(true);
-        setWalletAddress(stxAddress);
-        fetchBalance(stxAddress);
+        // Find the address object with symbol 'STX'
+        const stxAddressObj = response.addresses.find(
+          (addr: any) => addr.symbol === "STX"
+        );
+
+        console.log("STX address object:", stxAddressObj);
+
+        if (stxAddressObj && stxAddressObj.address) {
+          const stxAddress = stxAddressObj.address;
+          console.log("Extracted STX address:", stxAddress);
+
+          setWalletConnected(true);
+          setWalletAddress(stxAddress);
+          fetchBalance(stxAddress);
+        } else {
+          console.error("Could not find STX address in response");
+        }
+      } else {
+        console.error("No addresses found in response");
       }
     } catch (e) {
       console.error("Connection failed:", e);
