@@ -77,8 +77,20 @@ const CryptoPayment: React.FC = () => {
       const data = await res.json();
       console.log("Balance data:", data);
 
-      // STX balance is in microstacks
-      const stxBalance = Number(data.stx.balance) / 1e6;
+      // STX balance is in microstacks - handle different response structures
+      let stxBalance = 0;
+
+      if (data.stx && data.stx.balance !== undefined) {
+        stxBalance = Number(data.stx.balance) / 1e6;
+      } else if (data.balance !== undefined) {
+        stxBalance = Number(data.balance) / 1e6;
+      } else {
+        console.warn("Could not find balance in response structure");
+        setBalance(undefined);
+        return;
+      }
+
+      console.log("Parsed STX balance:", stxBalance);
       setBalance(stxBalance);
     } catch (e) {
       console.error("Error fetching balance:", e);
