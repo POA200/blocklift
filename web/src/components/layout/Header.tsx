@@ -30,7 +30,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <div className="flex items-center gap-6">
             <Link
-              to="/hero"
+              to="#hero"
               className="flex items-center gap-1 inline-flex"
               aria-label="Blocklift home"
             >
