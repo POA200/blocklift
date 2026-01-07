@@ -8,6 +8,7 @@ import Blog from "@/pages/Blog";
 import Contact from "@/pages/Contact";
 import Volunteer from "@/pages/Volunteer";
 import ImpactChain from "@/pages/ImpactChain";
+import Admin from "@/pages/Admin";
 import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import Terms from "@/pages/legal/Terms";
 
@@ -94,6 +95,8 @@ export default function Router() {
       return <Volunteer />;
     case "/blog":
       return <Blog />;
+    case "/admin":
+      return <Admin />;
     case "/contact":
       return <Contact />;
     case "/privacy-policy":
