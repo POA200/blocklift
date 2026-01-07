@@ -5,10 +5,31 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, ArrowRight } from "lucide-react";
-import { POSTS_MANIFEST } from "@/content/blog/index";
+import {
+  POSTS_MANIFEST,
+  type BlogPost as StaticBlogPost,
+} from "@/content/blog/index";
 import { navigate } from "@/lib/router";
+import { useEffect, useState } from "react";
+
+type BackendBlogPost = {
+  slug: string;
+  title: string;
+  date: string;
+  excerpt: string;
+  category: string;
+};
+
+function parseDate(d: string): number {
+  const t = Date.parse(d);
+  return isNaN(t) ? 0 : t;
+}
 
 export default function BlogIndex() {
+  const [backendPosts, setBackendPosts] = useState<BackendBlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const handleGoBack = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -20,6 +41,40 @@ export default function BlogIndex() {
   const handlePostClick = (slug: string) => {
     navigate(`/blog/${slug}`);
   };
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const backendUrl =
+          import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        const res = await fetch(`${backendUrl}/api/blog/posts`);
+        if (!res.ok) throw new Error("Failed to load blog posts");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.posts)) {
+          setBackendPosts(data.posts);
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Failed to load posts");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
+
+  // Merge static and backend posts (dedupe by slug)
+  const mergedPosts: BackendBlogPost[] = (() => {
+    const map = new Map<string, BackendBlogPost>();
+    for (const p of POSTS_MANIFEST as StaticBlogPost[]) {
+      map.set(p.slug, p);
+    }
+    for (const p of backendPosts) {
+      map.set(p.slug, p);
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => parseDate(b.date) - parseDate(a.date)
+    );
+  })();
 
   return (
     <div>
@@ -57,7 +112,7 @@ export default function BlogIndex() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {POSTS_MANIFEST.map((post) => (
+          {mergedPosts.map((post) => (
             <Card
               key={post.slug}
               className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group"
@@ -86,12 +141,15 @@ export default function BlogIndex() {
           ))}
         </div>
 
-        {POSTS_MANIFEST.length === 0 && (
+        {!loading && mergedPosts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               No blog posts available yet. Check back soon!
             </p>
           </div>
+        )}
+        {error && (
+          <div className="text-center py-6 text-sm text-red-500">{error}</div>
         )}
       </main>
       <SimpleFooter />

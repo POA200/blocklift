@@ -7,6 +7,7 @@ import ambassadorRouter from './routes/ambassador';
 import paymentsRouter from './routes/payments';
 import galleryRouter from './routes/gallery';
 import educationRouter from './routes/education';
+import blogRouter from './routes/blog';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/ambassador', ambassadorRouter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/gallery', galleryRouter);
 app.use('/api/education', educationRouter);
+app.use('/api/blog', blogRouter);
 
 // Not found handler
 app.use((req: Request, res: Response) => {

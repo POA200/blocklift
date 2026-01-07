@@ -19,42 +19,64 @@ export default function BlogPost({ slug }: BlogPostProps) {
   const [content, setContent] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isBackendPost, setIsBackendPost] = useState(false);
 
   const post = POSTS_MANIFEST.find((p) => p.slug === slug);
 
   useEffect(() => {
-    if (!post) {
-      setError(true);
-      setLoading(false);
-      return;
-    }
-
     setLoading(true);
     setError(false);
 
-    fetch(`/content/blog/${slug}.md`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch post content");
+    if (post) {
+      // Load from static public content
+      fetch(`/content/blog/${slug}.md`)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Failed to fetch post content");
+          }
+          return response.text();
+        })
+        .then((text) => {
+          setContent(text);
+          setIsBackendPost(false);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error loading blog post:", err);
+          setError(true);
+          setLoading(false);
+        });
+      return;
+    }
+
+    // Try backend post
+    (async () => {
+      try {
+        const backendUrl =
+          import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+        const res = await fetch(`${backendUrl}/api/blog/posts/${slug}`);
+        if (!res.ok) throw new Error("Not found");
+        const data = await res.json();
+        if (data.success && data.post?.content) {
+          setContent(data.post.content as string);
+          setIsBackendPost(true);
+        } else {
+          throw new Error("Invalid data");
         }
-        return response.text();
-      })
-      .then((text) => {
-        setContent(text);
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error loading blog post:", err);
+      } catch (e) {
+        console.error("Error loading blog post (backend):", e);
         setError(true);
         setLoading(false);
-      });
+      }
+    })();
   }, [slug, post]);
 
   const handleGoBack = () => {
     navigate("/blog");
   };
 
-  if (!post) {
+  if (!post && !isBackendPost) {
     return (
       <div>
         <Seo title="Post Not Found - BlockLift" noindex={true} />
@@ -81,8 +103,8 @@ export default function BlogPost({ slug }: BlogPostProps) {
   return (
     <div>
       <Seo
-        title={`${post.title} - BlockLift Blog`}
-        description={post.excerpt}
+        title={`${post?.title || slug} - BlockLift Blog`}
+        description={post?.excerpt || "Blog post"}
         noindex={false}
       />
       <SimpleHeader />
@@ -102,16 +124,18 @@ export default function BlogPost({ slug }: BlogPostProps) {
             {/* Post Header */}
             <div className="mb-8 pb-8 border-b">
               <div className="flex items-center gap-2 mb-4">
-                <Badge variant="secondary">{post.category}</Badge>
+                <Badge variant="secondary">{post?.category || "Blog"}</Badge>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>{post.date}</span>
+                  <span>{post?.date || ""}</span>
                 </div>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-4">
-                {post.title}
+                {post?.title || slug}
               </h1>
-              <p className="text-lg text-muted-foreground">{post.excerpt}</p>
+              {post?.excerpt && (
+                <p className="text-lg text-muted-foreground">{post.excerpt}</p>
+              )}
             </div>
 
             {/* Post Content */}

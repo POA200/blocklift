@@ -8,18 +8,10 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ReactMarkdown from "react-markdown";
 import Seo from "@/components/Seo";
-import ArticleUploadDialog from "@/components/sections/core/ArticleUploadDialog";
 
 // Types for scalable content structure
 interface EducationItem {
@@ -55,12 +47,6 @@ export default function Education() {
   const [selectedItem, setSelectedItem] = useState<EducationItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [deleteTokenInput, setDeleteTokenInput] = useState("");
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
-    null
-  );
 
   // Function to fetch items (reusable)
   const fetchItems = async () => {
@@ -79,58 +65,6 @@ export default function Education() {
       }
     } catch (error) {
       console.error("Error fetching education items:", error);
-    }
-  };
-
-  // Delete an education item
-  const handleDeleteItem = async (e: React.MouseEvent, itemId: string) => {
-    e.stopPropagation();
-    setShowDeleteConfirm(itemId);
-    setDeleteTokenInput("");
-    setDeleteError(null);
-  };
-
-  const confirmDelete = async (itemId: string) => {
-    if (!deleteTokenInput.trim()) {
-      setDeleteError("Please enter the upload token");
-      return;
-    }
-
-    setDeleting(itemId);
-    setDeleteError(null);
-    try {
-      const backendUrl =
-        import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
-      const response = await fetch(
-        `${backendUrl}/api/education/items/${itemId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${deleteTokenInput}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        setItems(items.filter((item) => item.id !== itemId));
-        if (selectedId === itemId) {
-          setSelectedId(null);
-        }
-        setShowDeleteConfirm(null);
-        setDeleteTokenInput("");
-      } else {
-        setDeleteError(
-          data.message || "Failed to delete article. Please check the token."
-        );
-      }
-    } catch (error) {
-      console.error("Error deleting item:", error);
-      setDeleteError("Error deleting article");
-    } finally {
-      setDeleting(null);
     }
   };
 
@@ -196,7 +130,7 @@ export default function Education() {
       <main className="max-w-7xl mx-auto px-6 py-16">
         {/* Section 1: Overview + Filters/Search */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="mb-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">
                 Education Portal
@@ -206,7 +140,6 @@ export default function Education() {
                 BlockLift tech. Filter by category or search by keyword.
               </p>
             </div>
-            <ArticleUploadDialog onArticleAdded={fetchItems} />
           </div>
 
           <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -251,23 +184,7 @@ export default function Education() {
                     onClick={() => setSelectedId(item.id)}
                   >
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-start justify-between gap-2">
-                        <span className="flex-1">{item.title}</span>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-medium text-primary whitespace-nowrap">
-                            {item.type.toUpperCase()}
-                          </span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={(e) => handleDeleteItem(e, item.id)}
-                            disabled={deleting === item.id}
-                          >
-                            {deleting === item.id ? "..." : "✕"}
-                          </Button>
-                        </div>
-                      </CardTitle>
+                      <CardTitle className="text-base">{item.title}</CardTitle>
                       <CardDescription className="text-xs text-muted-foreground">
                         {item.category}
                       </CardDescription>
@@ -276,11 +193,6 @@ export default function Education() {
                       <p className="text-sm text-muted-foreground">
                         {item.summary}
                       </p>
-                      {deleteError && selectedId === item.id && (
-                        <p className="text-xs text-red-500 mt-2">
-                          {deleteError}
-                        </p>
-                      )}
                     </CardContent>
                   </Card>
                 ))}
@@ -363,70 +275,6 @@ export default function Education() {
           </div>
         </div>
       </main>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={showDeleteConfirm !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setShowDeleteConfirm(null);
-            setDeleteTokenInput("");
-            setDeleteError(null);
-          }
-        }}
-      >
-        <DialogContent className="max-w-md bg-background border-[var(--border)]">
-          <DialogHeader>
-            <DialogTitle>Delete Article</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this article? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="deleteToken"
-                className="block text-sm font-medium text-foreground"
-              >
-                Upload Token *
-              </label>
-              <Input
-                id="deleteToken"
-                type="password"
-                placeholder="Enter upload token"
-                value={deleteTokenInput}
-                onChange={(e) => setDeleteTokenInput(e.target.value)}
-                className="bg-[var(--surface)] border-[var(--border)]"
-              />
-            </div>
-            {deleteError && (
-              <p className="text-sm text-red-500">{deleteError}</p>
-            )}
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowDeleteConfirm(null);
-                  setDeleteTokenInput("");
-                  setDeleteError(null);
-                }}
-                disabled={deleting !== null}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => confirmDelete(showDeleteConfirm!)}
-                disabled={deleting !== null || !deleteTokenInput.trim()}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {deleting === showDeleteConfirm ? "Deleting..." : "Delete"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <SimpleFooter />
     </div>

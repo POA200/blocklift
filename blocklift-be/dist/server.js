@@ -12,6 +12,7 @@ const ambassador_1 = __importDefault(require("./routes/ambassador"));
 const payments_1 = __importDefault(require("./routes/payments"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
 const education_1 = __importDefault(require("./routes/education"));
+const blog_1 = __importDefault(require("./routes/blog"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
@@ -57,6 +58,7 @@ app.use('/api/ambassador', ambassador_1.default);
 app.use('/api/payments', payments_1.default);
 app.use('/api/gallery', gallery_1.default);
 app.use('/api/education', education_1.default);
+app.use('/api/blog', blog_1.default);
 // Not found handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Not Found', path: req.originalUrl });

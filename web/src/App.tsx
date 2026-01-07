@@ -1,32 +1,33 @@
-import { ThemeProvider } from "./components/theme-provider"
-import Countdown from "./pages/Countdown"
-import { Routes, Route, useLocation } from "react-router-dom"
-import { useEffect } from "react"
-import Home from "./pages/Home"
-import Dashboard from "./pages/Dashboard"
-import Sponsor from "./pages/Sponsor"
-import Volunteer from "./pages/Volunteer"
-import About from './pages/About'
-import PrivacyPolicy from './pages/legal/PrivacyPolicy'
-import Terms from './pages/legal/Terms'
-import Blog from "./pages/Blog"
-import Contact from "./pages/Contact"
-import Pay from "./pages/Pay"
-import Education from "./pages/Education"
+import { ThemeProvider } from "./components/theme-provider";
+import Countdown from "./pages/Countdown";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import Sponsor from "./pages/Sponsor";
+import Volunteer from "./pages/Volunteer";
+import About from "./pages/About";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import Terms from "./pages/legal/Terms";
+import Blog from "./pages/Blog";
+import Contact from "./pages/Contact";
+import Pay from "./pages/Pay";
+import Education from "./pages/Education";
+import Admin from "./pages/Admin";
 
 function ScrollToHash() {
-  const { pathname, hash } = useLocation()
+  const { pathname, hash } = useLocation();
   useEffect(() => {
-    if (!hash) return
+    if (!hash) return;
     // remove leading '#'
-    const id = hash.replace('#', '')
-    const el = document.getElementById(id)
+    const id = hash.replace("#", "");
+    const el = document.getElementById(id);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      el.focus && (el as HTMLElement).focus()
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      el.focus && (el as HTMLElement).focus();
     }
-  }, [pathname, hash])
-  return null
+  }, [pathname, hash]);
+  return null;
 }
 
 function App() {
@@ -43,19 +44,20 @@ function App() {
           <Route path="/impact-chain" element={<Dashboard />} />
           <Route path="/sponsor" element={<Sponsor />} />
           <Route path="/education" element={<Education />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/about" element={<About />} />
           <Route path="/blog" element={<Blog />} />
-    <Route path="/contact" element={<Contact />} />
-    <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
-    <Route path="/legal/terms" element={<Terms />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/legal/terms" element={<Terms />} />
           <Route path="/pay" element={<Pay />} />
           {/* fallback to home */}
           <Route path="*" element={<Home />} />
         </Routes>
       </ThemeProvider>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

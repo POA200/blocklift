@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 
 interface ArticleUploadDialogProps {
   onArticleAdded?: () => void;
+  forcedToken?: string;
 }
 
 const CATEGORIES = [
@@ -25,6 +26,7 @@ const TYPES = ["article", "video", "code"] as const;
 
 export default function ArticleUploadDialog({
   onArticleAdded,
+  forcedToken,
 }: ArticleUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -59,8 +61,9 @@ export default function ArticleUploadDialog({
     setSuccess(false);
 
     try {
-      if (!uploadToken.trim()) {
-        setError("Please enter the upload token");
+      const authToken = (forcedToken ?? uploadToken).trim();
+      if (!authToken) {
+        setError("Missing authorization token");
         setLoading(false);
         return;
       }
@@ -83,7 +86,7 @@ export default function ArticleUploadDialog({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${uploadToken}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           title: formData.title,
@@ -111,7 +114,7 @@ export default function ArticleUploadDialog({
         videoUrl: "",
         codeSnippet: "",
       });
-      setUploadToken("");
+      if (!forcedToken) setUploadToken("");
 
       setTimeout(() => {
         setOpen(false);
@@ -141,29 +144,31 @@ export default function ArticleUploadDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Upload Token */}
-          <div className="space-y-2">
-            <label
-              htmlFor="uploadToken"
-              className="block text-sm font-medium text-foreground"
-            >
-              Upload Token *
-            </label>
-            <input
-              type="password"
-              id="uploadToken"
-              value={uploadToken}
-              onChange={(e) => setUploadToken(e.target.value)}
-              placeholder="Enter upload token"
-              className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              required
-            />
-            {!uploadToken.trim() && (
-              <p className="text-xs text-red-500">
-                Token is required to upload articles
-              </p>
-            )}
-          </div>
+          {/* Upload Token (hidden when forcedToken provided) */}
+          {!forcedToken && (
+            <div className="space-y-2">
+              <label
+                htmlFor="uploadToken"
+                className="block text-sm font-medium text-foreground"
+              >
+                Upload Token *
+              </label>
+              <input
+                type="password"
+                id="uploadToken"
+                value={uploadToken}
+                onChange={(e) => setUploadToken(e.target.value)}
+                placeholder="Enter upload token"
+                className="w-full px-3 py-2 border border-[var(--border)] rounded-md bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                required
+              />
+              {!uploadToken.trim() && (
+                <p className="text-xs text-red-500">
+                  Token is required to upload articles
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Title */}
           <div className="space-y-2">

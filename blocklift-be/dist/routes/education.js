@@ -4,6 +4,50 @@ const express_1 = require("express");
 const router = (0, express_1.Router)();
 console.log('✅ Education router loaded successfully');
 // ============================================
+// SECURE AUTHENTICATION MIDDLEWARE
+// ============================================
+/**
+ * Middleware to verify the upload token from Authorization header.
+ * Expected format: "Bearer <TOKEN>"
+ * Compares against process.env.UPLOAD_SECRET_TOKEN
+ */
+const checkAuth = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Missing Authorization header',
+        });
+    }
+    // Extract token from "Bearer <TOKEN>"
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Invalid Authorization header format. Use: Bearer <TOKEN>',
+        });
+    }
+    const token = parts[1];
+    const secretToken = process.env.UPLOAD_SECRET_TOKEN;
+    console.log('Received token:', token);
+    console.log('Expected token:', secretToken);
+    if (!secretToken) {
+        console.error('UPLOAD_SECRET_TOKEN environment variable is not set');
+        return res.status(500).json({
+            error: 'Server configuration error',
+            message: 'Upload secret token not configured',
+        });
+    }
+    if (token !== secretToken) {
+        return res.status(401).json({
+            error: 'Unauthorized',
+            message: 'Invalid token',
+        });
+    }
+    // Token is valid, proceed
+    next();
+};
+// ============================================
 // DUMMY EDUCATION DATA
 // ============================================
 const EDUCATION_ITEMS = [
@@ -846,7 +890,7 @@ router.get('/categories', (req, res) => {
 // POST /api/education/upload
 // Upload a new education article
 // ============================================
-router.post('/upload', (req, res) => {
+router.post('/upload', checkAuth, (req, res) => {
     try {
         const { title, summary, category, type, content, videoUrl, codeSnippet } = req.body;
         // Validate required fields
@@ -894,6 +938,34 @@ router.post('/upload', (req, res) => {
     catch (error) {
         console.error('Error uploading education article:', error);
         res.status(500).json({ error: 'Failed to upload article' });
+    }
+});
+// ============================================
+// Delete an education article
+// ============================================
+router.delete('/items/:id', checkAuth, (req, res) => {
+    try {
+        const { id } = req.params;
+        // Find the index of the item to delete
+        const itemIndex = EDUCATION_ITEMS.findIndex((item) => item.id === id);
+        if (itemIndex === -1) {
+            return res.status(404).json({
+                error: 'Article not found',
+                message: `No article found with ID: ${id}`
+            });
+        }
+        // Remove the item from the array
+        const deletedItem = EDUCATION_ITEMS.splice(itemIndex, 1)[0];
+        console.log(`✅ Education item deleted: ${deletedItem.id} - ${deletedItem.title}`);
+        res.json({
+            success: true,
+            message: 'Article deleted successfully',
+            item: deletedItem
+        });
+    }
+    catch (error) {
+        console.error('Error deleting education article:', error);
+        res.status(500).json({ error: 'Failed to delete article' });
     }
 });
 exports.default = router;
