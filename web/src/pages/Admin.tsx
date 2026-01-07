@@ -150,14 +150,22 @@ function BlogAdmin({ authToken }: { authToken: string }) {
 
   const [form, setForm] = useState({
     title: "",
-    slug: "",
     category: "",
     excerpt: "",
     content: "",
-    date: "",
+    link: "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitMsg, setSubmitMsg] = useState<string | null>(null);
+
+  const blogCategories = [
+    "Stacks",
+    "Community",
+    "Blockchain",
+    "Impact",
+    "Tutorial",
+    "Product",
+  ];
 
   const backendUrl = useMemo(
     () => import.meta.env.VITE_BACKEND_URL || "http://localhost:3000",
@@ -203,11 +211,10 @@ function BlogAdmin({ authToken }: { authToken: string }) {
       setSubmitMsg("Post created successfully");
       setForm({
         title: "",
-        slug: "",
         category: "",
         excerpt: "",
         content: "",
-        date: "",
+        link: "",
       });
       await loadPosts();
     } catch (e) {
@@ -243,45 +250,69 @@ function BlogAdmin({ authToken }: { authToken: string }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <form onSubmit={handleCreate} className="space-y-3">
-            <Input
-              placeholder="Title"
-              value={form.title}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, title: e.target.value }))
-              }
-            />
-            <Input
-              placeholder="Slug (optional, auto from title)"
-              value={form.slug}
-              onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-            />
-            <Input
-              placeholder="Category"
-              value={form.category}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, category: e.target.value }))
-              }
-            />
-            <Input
-              placeholder="Date (optional, e.g. Jan 2, 2026)"
-              value={form.date}
-              onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-            />
-            <Input
-              placeholder="Excerpt"
-              value={form.excerpt}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, excerpt: e.target.value }))
-              }
-            />
-            <textarea
-              placeholder="Content (Markdown)"
-              className="w-full min-h-[220px] border rounded px-3 py-2 bg-background"
-              value={form.content}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, content: e.target.value }))
-              }
-            />
+            <div>
+              <label className="text-sm font-medium">Title *</label>
+              <Input
+                placeholder="Blog post title"
+                value={form.title}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, title: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Category *</label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value }))
+                }
+                className="w-full border rounded px-3 py-2 bg-background"
+              >
+                <option value="">Select a category</option>
+                {blogCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Short Description *</label>
+              <Input
+                placeholder="Brief excerpt for the blog list"
+                value={form.excerpt}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, excerpt: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Read More Link</label>
+              <Input
+                placeholder="e.g., /blog/post-slug or https://external-link.com"
+                value={form.link}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, link: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">
+                Content (Markdown) *
+              </label>
+              <textarea
+                placeholder="Full blog content in Markdown"
+                className="w-full min-h-[220px] border rounded px-3 py-2 bg-background"
+                value={form.content}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, content: e.target.value }))
+                }
+              />
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Date is automatically set to today.
+            </div>
             {submitMsg && (
               <div className="text-sm text-center text-muted-foreground">
                 {submitMsg}
@@ -297,11 +328,10 @@ function BlogAdmin({ authToken }: { authToken: string }) {
                 onClick={() =>
                   setForm({
                     title: "",
-                    slug: "",
                     category: "",
                     excerpt: "",
                     content: "",
-                    date: "",
+                    link: "",
                   })
                 }
               >

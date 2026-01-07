@@ -83,6 +83,82 @@ const writePost = (post) => {
     fs_1.default.writeFileSync(filePath, JSON.stringify(post, null, 2), 'utf8');
 };
 // ============================================
+// Seed dummy posts if none exist
+// ============================================
+const seedDummyPosts = () => {
+    try {
+        const existingPosts = readAllPosts();
+        if (existingPosts.length > 0) {
+            console.log(`✅ Blog: Found ${existingPosts.length} existing posts, skipping seed`);
+            return;
+        }
+        const dummyPosts = [
+            {
+                slug: "stacks-nft-impact-explained",
+                title: "Stacks NFT Impact Explained: How BlockLift Uses Bitcoin-Secured Proof",
+                date: "Dec 2, 2025",
+                category: "Stacks",
+                excerpt: "Discover how BlockLift leverages Stacks Layer 2 to create immutable, Bitcoin-secured Proof of Impact NFTs that verify every donation and distribution.",
+                content: "# Stacks NFT Impact Explained\n\nBlockLift uses Stacks Layer 2 to create immutable, Bitcoin-secured NFTs that verify every donation and distribution with transparency.",
+                link: "/blog/stacks-nft-impact-explained"
+            },
+            {
+                slug: "ambassador-spotlight-lagos",
+                title: "Ambassador Spotlight: Bringing BlockLift to Lagos Communities",
+                date: "Nov 28, 2025",
+                category: "Community",
+                excerpt: "Meet our local ambassadors in Lagos who are bridging the gap between blockchain technology and grassroots impact, ensuring transparent aid delivery.",
+                content: "# Ambassador Spotlight: Lagos\n\nOur ambassadors in Lagos are making a real difference in their communities by bringing blockchain transparency to aid delivery.",
+                link: "/blog/ambassador-spotlight-lagos"
+            },
+            {
+                slug: "transparency-blockchain-charity",
+                title: "Why Transparency Matters: The Case for Blockchain in Charity",
+                date: "Nov 20, 2025",
+                category: "Blockchain",
+                excerpt: "Traditional charity models often lack transparency. Learn how BlockLift's blockchain-based approach ensures every donation is tracked, verified, and immutable.",
+                content: "# Transparency in Charity\n\nBlockchain technology ensures that every donation is tracked and verified, creating unprecedented transparency in charitable giving.",
+                link: "/blog/transparency-blockchain-charity"
+            },
+            {
+                slug: "first-distribution-success",
+                title: "Success Story: Our First Major School Supply Distribution",
+                date: "Nov 15, 2025",
+                category: "Impact",
+                excerpt: "Celebrating our milestone: 500 students across 5 schools received essential supplies. See how blockchain verification made every step transparent and accountable.",
+                content: "# First Distribution Success\n\nWe successfully distributed supplies to 500 students across 5 schools, all verified on the blockchain.",
+                link: "/blog/first-distribution-success"
+            },
+            {
+                slug: "how-to-verify-donation",
+                title: "How to Verify Your Donation on the Stacks Blockchain",
+                date: "Nov 10, 2025",
+                category: "Tutorial",
+                excerpt: "A step-by-step guide for donors to verify their contributions on the Stacks blockchain using the Impact-Chain Dashboard and Stacks Explorer.",
+                content: "# How to Verify Your Donation\n\nLearn how to verify your donation on the Stacks blockchain in just a few simple steps.",
+                link: "/blog/how-to-verify-donation"
+            },
+            {
+                slug: "paystack-integration-announcement",
+                title: "Announcing Paystack Integration: Donate with Naira, Verify on Bitcoin",
+                date: "Nov 5, 2025",
+                category: "Product",
+                excerpt: "We've integrated Paystack to make donations easier for Nigerian donors. Pay with Naira and get the same blockchain verification as crypto donations.",
+                content: "# Paystack Integration\n\nNow donors can pay with Naira through Paystack and still get full blockchain verification of their donation.",
+                link: "/blog/paystack-integration-announcement"
+            }
+        ];
+        for (const post of dummyPosts) {
+            writePost(post);
+        }
+        console.log(`✅ Blog: Seeded ${dummyPosts.length} dummy blog posts`);
+    }
+    catch (error) {
+        console.error('Failed to seed dummy posts:', error);
+    }
+};
+seedDummyPosts();
+// ============================================
 // Routes
 // ============================================
 router.get('/', (_req, res) => {
@@ -125,7 +201,7 @@ router.get('/posts/:slug', (req, res) => {
 // Create a post
 router.post('/posts', checkAuth, (req, res) => {
     try {
-        const { title, slug: providedSlug, category, excerpt, content, date } = req.body;
+        const { title, slug: providedSlug, category, excerpt, content, date, link } = req.body;
         if (!title || !category || !excerpt || !content) {
             return res.status(400).json({ success: false, error: 'Missing required fields: title, category, excerpt, content' });
         }
@@ -138,7 +214,7 @@ router.post('/posts', checkAuth, (req, res) => {
             return res.status(409).json({ success: false, error: 'A post with this slug already exists' });
         }
         const displayDate = date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const post = { slug, title, category, excerpt, content, date: displayDate };
+        const post = { slug, title, category, excerpt, content, date: displayDate, ...(link && { link }) };
         writePost(post);
         res.json({ success: true, post });
     }
