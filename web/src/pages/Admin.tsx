@@ -5,7 +5,6 @@ import Seo from "@/components/Seo";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ArticleUploadDialog from "@/components/sections/core/ArticleUploadDialog";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +19,18 @@ type BlogSummary = {
   date: string;
   category: string;
   excerpt: string;
+};
+
+type EducationCourse = {
+  id: string;
+  title: string;
+  summary: string;
+  category:
+    | "Bitcoin/Web3 Basics"
+    | "Stacks Layer 2"
+    | "Clarity Smart Contracts"
+    | "BlockLift Technology";
+  type: "article" | "video" | "code";
 };
 
 export default function Admin() {
@@ -678,24 +689,292 @@ function GalleryAdmin({ authToken }: { authToken: string }) {
 }
 
 function EducationAdmin({ authToken }: { authToken: string }) {
+  const [courses, setCourses] = useState<EducationCourse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    title: "",
+    summary: "",
+    category: "",
+    type: "article",
+    content: "",
+    videoUrl: "",
+    codeSnippet: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitMsg, setSubmitMsg] = useState<string | null>(null);
+
+  const educationCategories = [
+    "Bitcoin/Web3 Basics",
+    "Stacks Layer 2",
+    "Clarity Smart Contracts",
+    "BlockLift Technology",
+  ];
+
+  const educationTypes = ["article", "video", "code"];
+
+  const backendUrl = useMemo(
+    () => import.meta.env.VITE_BACKEND_URL || "http://localhost:3000",
+    []
+  );
+
+  const loadCourses = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${backendUrl}/api/education/courses`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setCourses(data.courses as EducationCourse[]);
+          return;
+        }
+      }
+
+      // Fallback for older backend versions that only expose /items
+      const fallback = await fetch(`${backendUrl}/api/education/items`);
+      if (!fallback.ok) throw new Error("Failed to load courses");
+      const data = await fallback.json();
+      if (data.items) {
+        setCourses(data.items as EducationCourse[]);
+        return;
+      }
+
+      throw new Error("Failed to load courses");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load courses");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setSubmitMsg(null);
+    try {
+      if (!authToken.trim()) throw new Error("Unlock required");
+      const res = await fetch(`${backendUrl}/api/education/courses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ ...form }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success)
+        throw new Error(data.error || "Create failed");
+      setSubmitMsg("Course created successfully");
+      setForm({
+        title: "",
+        summary: "",
+        category: "",
+        type: "article",
+        content: "",
+        videoUrl: "",
+        codeSnippet: "",
+      });
+      await loadCourses();
+    } catch (e) {
+      setSubmitMsg(e instanceof Error ? e.message : "Create failed");
+    } finally {
+      setSubmitting(false);
+      setTimeout(() => setSubmitMsg(null), 2500);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm(`Delete this course?`)) return;
+    try {
+      if (!authToken.trim()) throw new Error("Unlock required");
+      const res = await fetch(`${backendUrl}/api/education/courses/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false)
+        throw new Error(data.error || "Delete failed");
+      await loadCourses();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Delete failed");
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Upload Education Content</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="text-sm text-muted-foreground">
-          The admin unlock pass is used for uploads.
-        </div>
-        <ArticleUploadDialog forcedToken={authToken} />
-        <div className="prose prose-sm dark:prose-invert">
-          <h4>Tip</h4>
-          <p>
-            After upload, refresh the Education page to see the new item in the
-            list.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Create Education Course</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <form onSubmit={handleCreate} className="space-y-3">
+            <div>
+              <label className="text-sm font-medium">Title *</label>
+              <Input
+                placeholder="Course title"
+                value={form.title}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, title: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Summary *</label>
+              <Input
+                placeholder="Brief course description"
+                value={form.summary}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, summary: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Category *</label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value }))
+                }
+                className="w-full border rounded px-3 py-2 bg-background"
+              >
+                <option value="">Select a category</option>
+                {educationCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">Type *</label>
+              <select
+                value={form.type}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, type: e.target.value }))
+                }
+                className="w-full border rounded px-3 py-2 bg-background"
+              >
+                {educationTypes.map((t) => (
+                  <option key={t} value={t}>
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium">
+                Content (Markdown) *
+              </label>
+              <textarea
+                placeholder="Full course content in Markdown"
+                className="w-full min-h-[150px] border rounded px-3 py-2 bg-background"
+                value={form.content}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, content: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">
+                Video URL (optional)
+              </label>
+              <Input
+                placeholder="e.g., https://youtube.com/watch?v=..."
+                value={form.videoUrl}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, videoUrl: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">
+                Code Snippet (optional)
+              </label>
+              <textarea
+                placeholder="Code example in markdown format"
+                className="w-full min-h-[100px] border rounded px-3 py-2 bg-background font-mono text-xs"
+                value={form.codeSnippet}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, codeSnippet: e.target.value }))
+                }
+              />
+            </div>
+            {submitMsg && (
+              <div className="text-sm text-center text-muted-foreground">
+                {submitMsg}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <Button type="submit" disabled={submitting}>
+                Create Course
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  setForm({
+                    title: "",
+                    summary: "",
+                    category: "",
+                    type: "article",
+                    content: "",
+                    videoUrl: "",
+                    codeSnippet: "",
+                  })
+                }
+              >
+                Reset
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Existing Courses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-sm text-muted-foreground">Loading...</div>
+          ) : error ? (
+            <div className="text-sm text-red-500">{error}</div>
+          ) : courses.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No courses yet.</div>
+          ) : (
+            <div className="space-y-3">
+              {courses.map((c) => (
+                <div
+                  key={c.id}
+                  className="border rounded p-3 flex items-start justify-between gap-3"
+                >
+                  <div>
+                    <div className="font-medium">{c.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {c.category} • {c.type}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {c.summary}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleDelete(c.id)}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

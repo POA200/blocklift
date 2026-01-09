@@ -1,4 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import path from 'path';
+import fs from 'fs';
 
 const router = Router();
 
@@ -57,6 +59,26 @@ const checkAuth = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // ============================================
+// Storage locations for courses
+// ============================================
+const defaultBaseDir =
+  process.env.UPLOADS_BASE_PATH ||
+  (process.env.RENDER ? '/opt/render/project/tmp/uploads' : path.join(__dirname, '../../uploads'));
+
+let educationDir = path.join(defaultBaseDir, 'education');
+let coursesDir = path.join(educationDir, 'courses');
+
+try {
+  fs.mkdirSync(coursesDir, { recursive: true });
+} catch (error) {
+  console.error('Failed to create education storage directory:', coursesDir, error);
+  const fallbackDir = '/tmp/uploads/education/courses';
+  educationDir = path.dirname(fallbackDir);
+  coursesDir = fallbackDir;
+  fs.mkdirSync(coursesDir, { recursive: true });
+}
+
+// ============================================
 // Education Item Types
 // ============================================
 interface EducationItem {
@@ -72,9 +94,45 @@ interface EducationItem {
 }
 
 // ============================================
-// DUMMY EDUCATION DATA
+// Helper functions for file-based storage
 // ============================================
-const EDUCATION_ITEMS: EducationItem[] = [
+const readAllCourses = (): EducationItem[] => {
+  try {
+    const files = fs.readdirSync(coursesDir).filter((f) => f.endsWith('.json'));
+    const courses: EducationItem[] = [];
+    for (const f of files) {
+      try {
+        const raw = fs.readFileSync(path.join(coursesDir, f), 'utf8');
+        const data = JSON.parse(raw) as EducationItem;
+        if (data && data.id) courses.push(data);
+      } catch (err) {
+        console.warn('Failed to read education file:', f, err);
+      }
+    }
+    return courses;
+  } catch (err) {
+    console.error('Error reading education courses:', err);
+    return [];
+  }
+};
+
+const writeCourse = (course: EducationItem) => {
+  const filePath = path.join(coursesDir, `${course.id}.json`);
+  fs.writeFileSync(filePath, JSON.stringify(course, null, 2), 'utf8');
+};
+
+const deleteCourse = (id: string | undefined) => {
+  if (!id) return;
+  const filePath = path.join(coursesDir, `${id}.json`);
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+};
+
+// ============================================
+// DUMMY EDUCATION DATA AND SEEDING
+// ============================================
+const DUMMY_COURSES: EducationItem[] = [
   {
     id: 'basics-ledger',
     title: 'What is a Decentralized Ledger?',
@@ -860,13 +918,36 @@ Boom Wallet makes it easy for anyone to participate in the Bitcoin and Stacks ec
 ];
 
 // ============================================
+// Seed dummy courses to files if none exist
+// ============================================
+const seedDummyCourses = () => {
+  try {
+    const existingCourses = readAllCourses();
+    if (existingCourses.length > 0) {
+      console.log(`✅ Education: Found ${existingCourses.length} existing courses, skipping seed`);
+      return;
+    }
+
+    for (const course of DUMMY_COURSES) {
+      writeCourse(course);
+    }
+    console.log(`✅ Education: Seeded ${DUMMY_COURSES.length} dummy courses`);
+  } catch (error) {
+    console.error('Failed to seed dummy education courses:', error);
+  }
+};
+
+seedDummyCourses();
+
+// ============================================
 // GET /api/education/items
 // Returns all education items (summary only, no full content)
 // ============================================
 router.get('/items', (req: Request, res: Response) => {
   try {
-    // Return items without full content for listing view
-    const items = EDUCATION_ITEMS.map(({ content, codeSnippet, ...item }) => item);
+    // Return items from files without full content for listing view
+    const courses = readAllCourses();
+    const items = courses.map(({ content, codeSnippet, ...item }) => item);
     res.json({ success: true, items });
   } catch (error) {
     console.error('Error fetching education items:', error);
@@ -881,7 +962,8 @@ router.get('/items', (req: Request, res: Response) => {
 router.get('/items/:id', (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const item = EDUCATION_ITEMS.find(i => i.id === id);
+    const courses = readAllCourses();
+    const item = courses.find(i => i.id === id);
 
     if (!item) {
       return res.status(404).json({ error: 'Education item not found' });
@@ -914,7 +996,119 @@ router.get('/categories', (req: Request, res: Response) => {
 });
 
 // ============================================
-// POST /api/education/upload
+// GET /api/education/courses
+// List all courses (summary info)
+// ============================================
+router.get('/courses', (_req: Request, res: Response) => {
+  try {
+    const courses = readAllCourses().map(({ content, codeSnippet, ...rest }) => rest);
+    // Sort by title
+    courses.sort((a, b) => a.title.localeCompare(b.title));
+    res.json({ success: true, courses });
+  } catch (error) {
+    console.error('Failed to list education courses:', error);
+    res.status(500).json({ success: false, error: 'Failed to list education courses' });
+  }
+});
+
+// ============================================
+// GET /api/education/courses/:id
+// Get single course by id
+// ============================================
+router.get('/courses/:id', (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const file = path.join(coursesDir, `${id}.json`);
+    if (!fs.existsSync(file)) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
+    }
+    const raw = fs.readFileSync(file, 'utf8');
+    const data = JSON.parse(raw) as EducationItem;
+    res.json({ success: true, course: data });
+  } catch (error) {
+    console.error('Failed to get education course:', error);
+    res.status(500).json({ success: false, error: 'Failed to get education course' });
+  }
+});
+
+// ============================================
+// POST /api/education/courses
+// Create a new course
+// ============================================
+router.post('/courses', checkAuth, (req: Request, res: Response) => {
+  try {
+    const { title, summary, category, type, content, videoUrl, codeSnippet } = req.body as Partial<EducationItem>;
+    
+    if (!title || !summary || !category || !type || !content) {
+      return res.status(400).json({ success: false, error: 'Missing required fields: title, summary, category, type, content' });
+    }
+
+    // Validate category
+    const validCategories = [
+      'Bitcoin/Web3 Basics',
+      'Stacks Layer 2',
+      'Clarity Smart Contracts',
+      'BlockLift Technology',
+    ];
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ success: false, error: 'Invalid category' });
+    }
+
+    // Validate type
+    const validTypes = ['article', 'video', 'code'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ success: false, error: 'Invalid type' });
+    }
+
+    // Create a new course with a unique ID
+    const id = `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    const newCourse: EducationItem = {
+      id,
+      title,
+      summary,
+      category: category as EducationItem['category'],
+      type: type as EducationItem['type'],
+      content,
+    };
+    
+    if (videoUrl) newCourse.videoUrl = videoUrl;
+    if (codeSnippet) newCourse.codeSnippet = codeSnippet;
+
+    writeCourse(newCourse);
+    console.log(`✅ New education course created: ${newCourse.id} - ${newCourse.title}`);
+
+    res.json({ success: true, course: newCourse });
+  } catch (error) {
+    console.error('Failed to create education course:', error);
+    res.status(500).json({ success: false, error: 'Failed to create education course' });
+  }
+});
+
+// ============================================
+// DELETE /api/education/courses/:id
+// Delete a course
+// ============================================
+router.delete('/courses/:id', checkAuth, (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const file = path.join(coursesDir, `${id}.json`);
+    if (!fs.existsSync(file)) {
+      return res.status(404).json({ success: false, error: 'Course not found' });
+    }
+    const raw = fs.readFileSync(file, 'utf8');
+    const course = JSON.parse(raw) as EducationItem;
+    deleteCourse(id);
+    console.log(`✅ Education course deleted: ${id} - ${course.title}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete education course:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete education course' });
+  }
+});
+
+// ============================================
+// POST /api/education/upload (legacy endpoint)
 // Upload a new education article
 // ============================================
 router.post('/upload', checkAuth, (req: Request, res: Response) => {
@@ -955,12 +1149,13 @@ router.post('/upload', checkAuth, (req: Request, res: Response) => {
       category: category as EducationItem['category'],
       type: type as EducationItem['type'],
       content,
-      videoUrl: videoUrl || undefined,
-      codeSnippet: codeSnippet || undefined,
     };
+    
+    if (videoUrl) newItem.videoUrl = videoUrl;
+    if (codeSnippet) newItem.codeSnippet = codeSnippet;
 
-    // Add to the items array
-    EDUCATION_ITEMS.push(newItem);
+    // Write to file
+    writeCourse(newItem);
 
     console.log(`✅ New education item uploaded: ${newItem.id} - ${newItem.title}`);
 
@@ -976,25 +1171,23 @@ router.post('/upload', checkAuth, (req: Request, res: Response) => {
 });
 
 // ============================================
-// Delete an education article
+// Delete an education article (legacy endpoint)
 // ============================================
 router.delete('/items/:id', checkAuth, (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-
-    // Find the index of the item to delete
-    const itemIndex = EDUCATION_ITEMS.findIndex((item) => item.id === id);
-
-    if (itemIndex === -1) {
+    const file = path.join(coursesDir, `${id}.json`);
+    if (!fs.existsSync(file)) {
       return res.status(404).json({ 
         error: 'Article not found',
         message: `No article found with ID: ${id}` 
       });
     }
 
-    // Remove the item from the array
-    const deletedItem = EDUCATION_ITEMS.splice(itemIndex, 1)[0]!;
+    const raw = fs.readFileSync(file, 'utf8');
+    const deletedItem = JSON.parse(raw) as EducationItem;
 
+    deleteCourse(id);
     console.log(`✅ Education item deleted: ${deletedItem.id} - ${deletedItem.title}`);
 
     res.json({ 

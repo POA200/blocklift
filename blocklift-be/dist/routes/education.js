@@ -1,6 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 const router = (0, express_1.Router)();
 console.log('✅ Education router loaded successfully');
 // ============================================
@@ -48,9 +53,63 @@ const checkAuth = (req, res, next) => {
     next();
 };
 // ============================================
-// DUMMY EDUCATION DATA
+// Storage locations for courses
 // ============================================
-const EDUCATION_ITEMS = [
+const defaultBaseDir = process.env.UPLOADS_BASE_PATH ||
+    (process.env.RENDER ? '/opt/render/project/tmp/uploads' : path_1.default.join(__dirname, '../../uploads'));
+let educationDir = path_1.default.join(defaultBaseDir, 'education');
+let coursesDir = path_1.default.join(educationDir, 'courses');
+try {
+    fs_1.default.mkdirSync(coursesDir, { recursive: true });
+}
+catch (error) {
+    console.error('Failed to create education storage directory:', coursesDir, error);
+    const fallbackDir = '/tmp/uploads/education/courses';
+    educationDir = path_1.default.dirname(fallbackDir);
+    coursesDir = fallbackDir;
+    fs_1.default.mkdirSync(coursesDir, { recursive: true });
+}
+// ============================================
+// Helper functions for file-based storage
+// ============================================
+const readAllCourses = () => {
+    try {
+        const files = fs_1.default.readdirSync(coursesDir).filter((f) => f.endsWith('.json'));
+        const courses = [];
+        for (const f of files) {
+            try {
+                const raw = fs_1.default.readFileSync(path_1.default.join(coursesDir, f), 'utf8');
+                const data = JSON.parse(raw);
+                if (data && data.id)
+                    courses.push(data);
+            }
+            catch (err) {
+                console.warn('Failed to read education file:', f, err);
+            }
+        }
+        return courses;
+    }
+    catch (err) {
+        console.error('Error reading education courses:', err);
+        return [];
+    }
+};
+const writeCourse = (course) => {
+    const filePath = path_1.default.join(coursesDir, `${course.id}.json`);
+    fs_1.default.writeFileSync(filePath, JSON.stringify(course, null, 2), 'utf8');
+};
+const deleteCourse = (id) => {
+    if (!id)
+        return;
+    const filePath = path_1.default.join(coursesDir, `${id}.json`);
+    if (fs_1.default.existsSync(filePath)) {
+        fs_1.default.unlinkSync(filePath);
+    }
+};
+// ============================================
+// DUMMY EDUCATION DATA AND SEEDING
+// ============================================
+const DUMMY_COURSES = [
     {
         id: 'basics-ledger',
         title: 'What is a Decentralized Ledger?',
@@ -835,13 +894,34 @@ Boom Wallet makes it easy for anyone to participate in the Bitcoin and Stacks ec
     },
 ];
 // ============================================
+// Seed dummy courses to files if none exist
+// ============================================
+const seedDummyCourses = () => {
+    try {
+        const existingCourses = readAllCourses();
+        if (existingCourses.length > 0) {
+            console.log(`✅ Education: Found ${existingCourses.length} existing courses, skipping seed`);
+            return;
+        }
+        for (const course of DUMMY_COURSES) {
+            writeCourse(course);
+        }
+        console.log(`✅ Education: Seeded ${DUMMY_COURSES.length} dummy courses`);
+    }
+    catch (error) {
+        console.error('Failed to seed dummy education courses:', error);
+    }
+};
+seedDummyCourses();
+// ============================================
 // GET /api/education/items
 // Returns all education items (summary only, no full content)
 // ============================================
 router.get('/items', (req, res) => {
     try {
-        // Return items without full content for listing view
-        const items = EDUCATION_ITEMS.map(({ content, codeSnippet, ...item }) => item);
+        // Return items from files without full content for listing view
+        const courses = readAllCourses();
+        const items = courses.map(({ content, codeSnippet, ...item }) => item);
         res.json({ success: true, items });
     }
     catch (error) {
@@ -856,7 +936,8 @@ router.get('/items', (req, res) => {
 router.get('/items/:id', (req, res) => {
     try {
         const { id } = req.params;
-        const item = EDUCATION_ITEMS.find(i => i.id === id);
+        const courses = readAllCourses();
+        const item = courses.find(i => i.id === id);
         if (!item) {
             return res.status(404).json({ error: 'Education item not found' });
         }
@@ -887,7 +968,113 @@ router.get('/categories', (req, res) => {
     }
 });
 // ============================================
-// POST /api/education/upload
+// GET /api/education/courses
+// List all courses (summary info)
+// ============================================
+router.get('/courses', (_req, res) => {
+    try {
+        const courses = readAllCourses().map(({ content, codeSnippet, ...rest }) => rest);
+        // Sort by title
+        courses.sort((a, b) => a.title.localeCompare(b.title));
+        res.json({ success: true, courses });
+    }
+    catch (error) {
+        console.error('Failed to list education courses:', error);
+        res.status(500).json({ success: false, error: 'Failed to list education courses' });
+    }
+});
+// ============================================
+// GET /api/education/courses/:id
+// Get single course by id
+// ============================================
+router.get('/courses/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+        const file = path_1.default.join(coursesDir, `${id}.json`);
+        if (!fs_1.default.existsSync(file)) {
+            return res.status(404).json({ success: false, error: 'Course not found' });
+        }
+        const raw = fs_1.default.readFileSync(file, 'utf8');
+        const data = JSON.parse(raw);
+        res.json({ success: true, course: data });
+    }
+    catch (error) {
+        console.error('Failed to get education course:', error);
+        res.status(500).json({ success: false, error: 'Failed to get education course' });
+    }
+});
+// ============================================
+// POST /api/education/courses
+// Create a new course
+// ============================================
+router.post('/courses', checkAuth, (req, res) => {
+    try {
+        const { title, summary, category, type, content, videoUrl, codeSnippet } = req.body;
+        if (!title || !summary || !category || !type || !content) {
+            return res.status(400).json({ success: false, error: 'Missing required fields: title, summary, category, type, content' });
+        }
+        // Validate category
+        const validCategories = [
+            'Bitcoin/Web3 Basics',
+            'Stacks Layer 2',
+            'Clarity Smart Contracts',
+            'BlockLift Technology',
+        ];
+        if (!validCategories.includes(category)) {
+            return res.status(400).json({ success: false, error: 'Invalid category' });
+        }
+        // Validate type
+        const validTypes = ['article', 'video', 'code'];
+        if (!validTypes.includes(type)) {
+            return res.status(400).json({ success: false, error: 'Invalid type' });
+        }
+        // Create a new course with a unique ID
+        const id = `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const newCourse = {
+            id,
+            title,
+            summary,
+            category: category,
+            type: type,
+            content,
+        };
+        if (videoUrl)
+            newCourse.videoUrl = videoUrl;
+        if (codeSnippet)
+            newCourse.codeSnippet = codeSnippet;
+        writeCourse(newCourse);
+        console.log(`✅ New education course created: ${newCourse.id} - ${newCourse.title}`);
+        res.json({ success: true, course: newCourse });
+    }
+    catch (error) {
+        console.error('Failed to create education course:', error);
+        res.status(500).json({ success: false, error: 'Failed to create education course' });
+    }
+});
+// ============================================
+// DELETE /api/education/courses/:id
+// Delete a course
+// ============================================
+router.delete('/courses/:id', checkAuth, (req, res) => {
+    try {
+        const { id } = req.params;
+        const file = path_1.default.join(coursesDir, `${id}.json`);
+        if (!fs_1.default.existsSync(file)) {
+            return res.status(404).json({ success: false, error: 'Course not found' });
+        }
+        const raw = fs_1.default.readFileSync(file, 'utf8');
+        const course = JSON.parse(raw);
+        deleteCourse(id);
+        console.log(`✅ Education course deleted: ${id} - ${course.title}`);
+        res.json({ success: true });
+    }
+    catch (error) {
+        console.error('Failed to delete education course:', error);
+        res.status(500).json({ success: false, error: 'Failed to delete education course' });
+    }
+});
+// ============================================
+// POST /api/education/upload (legacy endpoint)
 // Upload a new education article
 // ============================================
 router.post('/upload', checkAuth, (req, res) => {
@@ -923,11 +1110,13 @@ router.post('/upload', checkAuth, (req, res) => {
             category: category,
             type: type,
             content,
-            videoUrl: videoUrl || undefined,
-            codeSnippet: codeSnippet || undefined,
         };
-        // Add to the items array
-        EDUCATION_ITEMS.push(newItem);
+        if (videoUrl)
+            newItem.videoUrl = videoUrl;
+        if (codeSnippet)
+            newItem.codeSnippet = codeSnippet;
+        // Write to file
+        writeCourse(newItem);
         console.log(`✅ New education item uploaded: ${newItem.id} - ${newItem.title}`);
         res.json({
             success: true,
@@ -941,21 +1130,21 @@ router.post('/upload', checkAuth, (req, res) => {
     }
 });
 // ============================================
-// Delete an education article
+// Delete an education article (legacy endpoint)
 // ============================================
 router.delete('/items/:id', checkAuth, (req, res) => {
     try {
         const { id } = req.params;
-        // Find the index of the item to delete
-        const itemIndex = EDUCATION_ITEMS.findIndex((item) => item.id === id);
-        if (itemIndex === -1) {
+        const file = path_1.default.join(coursesDir, `${id}.json`);
+        if (!fs_1.default.existsSync(file)) {
             return res.status(404).json({
                 error: 'Article not found',
                 message: `No article found with ID: ${id}`
             });
         }
-        // Remove the item from the array
-        const deletedItem = EDUCATION_ITEMS.splice(itemIndex, 1)[0];
+        const raw = fs_1.default.readFileSync(file, 'utf8');
+        const deletedItem = JSON.parse(raw);
+        deleteCourse(id);
         console.log(`✅ Education item deleted: ${deletedItem.id} - ${deletedItem.title}`);
         res.json({
             success: true,
