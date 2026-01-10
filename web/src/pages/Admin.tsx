@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { Upload, Trash2, X } from "lucide-react";
 
 type BlogSummary = {
@@ -34,9 +35,9 @@ type EducationCourse = {
 };
 
 export default function Admin() {
-  const [active, setActive] = useState<"blog" | "gallery" | "education">(
-    "blog"
-  );
+  const [active, setActive] = useState<
+    "blog" | "gallery" | "education" | "metrics"
+  >("blog");
   const [authToken, setAuthToken] = useState<string>("");
   const [unlocked, setUnlocked] = useState(false);
   const [passcode, setPasscode] = useState("");
@@ -122,7 +123,7 @@ export default function Admin() {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 variant={active === "blog" ? "default" : "outline"}
                 onClick={() => setActive("blog")}
@@ -141,11 +142,22 @@ export default function Admin() {
               >
                 Education
               </Button>
+              <Button
+                variant={active === "metrics" ? "default" : "outline"}
+                onClick={() => setActive("metrics")}
+              >
+                Metrics & Distributions
+              </Button>
             </div>
 
             {active === "blog" && <BlogAdmin authToken={authToken} />}
             {active === "gallery" && <GalleryAdmin authToken={authToken} />}
             {active === "education" && <EducationAdmin authToken={authToken} />}
+            {active === "metrics" && (
+              <AdminDashboard
+                apiUrl={import.meta.env.VITE_API_URL || "http://localhost:3000"}
+              />
+            )}
           </>
         )}
       </main>

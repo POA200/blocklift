@@ -13,6 +13,8 @@ const payments_1 = __importDefault(require("./routes/payments"));
 const gallery_1 = __importDefault(require("./routes/gallery"));
 const education_1 = __importDefault(require("./routes/education"));
 const blog_1 = __importDefault(require("./routes/blog"));
+const admin_1 = __importDefault(require("./routes/admin"));
+const data_1 = require("./data");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +61,22 @@ app.use('/api/payments', payments_1.default);
 app.use('/api/gallery', gallery_1.default);
 app.use('/api/education', education_1.default);
 app.use('/api/blog', blog_1.default);
+app.use('/api/admin', admin_1.default);
+// Quick admin namespace ping for debugging
+app.get('/api/admin/health', (req, res) => {
+    res.json({ ok: true, ns: 'admin' });
+});
+// Public GET endpoints for frontend consumption (fallback if admin namespace is blocked)
+console.log('📍 Registering /api/metrics endpoint with store:', data_1.store.metrics.length, 'items');
+app.get('/api/metrics', (req, res) => {
+    console.log('📊 GET /api/metrics called');
+    res.json(data_1.store.metrics);
+});
+console.log('📍 Registering /api/distributions endpoint with store:', data_1.store.distributions.length, 'items');
+app.get('/api/distributions', (req, res) => {
+    console.log('📦 GET /api/distributions called');
+    res.json(data_1.store.distributions);
+});
 // Not found handler
 app.use((req, res) => {
     res.status(404).json({ error: 'Not Found', path: req.originalUrl });

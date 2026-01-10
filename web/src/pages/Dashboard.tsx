@@ -36,29 +36,27 @@ import {
 import Seo from "@/components/Seo";
 import { navigate } from "@/lib/router";
 
-// Static distribution data
-const STATIC_DISTRIBUTIONS = [
-  {
-    id: "dist_001",
-    schoolName: "St. Mary's Primary School",
-    location: "Ikeja, Lagos",
-    status: "verified",
-    studentsImpacted: 125,
-    timeAgo: "2 hours ago",
-    txId: "0xe7fbc62c",
-    supplies: ["25 School Bags"],
-    principal: "Mrs. Adebayo",
-    establishedYear: 1995,
-    totalStudents: 342,
-    totalSuppliesDistributed: 1025,
-    imageSrc:
-      "https://via.placeholder.com/400x200/10b981/ffffff?text=St.+Mary's+School",
-    isActive: true,
-  },
-];
+// Type definitions
+interface Distribution {
+  id: string;
+  schoolName: string;
+  location: string;
+  status: "verified" | "pending";
+  studentsImpacted: number;
+  timeAgo: string;
+  txId: string;
+  supplies: string[];
+  principal: string;
+  establishedYear: number;
+  totalStudents: number;
+  totalSuppliesDistributed: number;
+  imageSrc: string;
+  isActive: boolean;
+}
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<any[]>([]);
+  const [distributions, setDistributions] = useState<Distribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifyInput, setVerifyInput] = useState("");
   const [verifyStatus, setVerifyStatus] = useState<
@@ -71,20 +69,50 @@ export default function Dashboard() {
     "all"
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDistribution, setSelectedDistribution] = useState<
-    (typeof STATIC_DISTRIBUTIONS)[0] | null
-  >(null);
+  const [selectedDistribution, setSelectedDistribution] =
+    useState<Distribution | null>(null);
+
+  const apiUrl =
+    (import.meta.env.VITE_API_URL as string) || "http://localhost:3000";
 
   // Filter distributions
   const visibleDistributions =
     txFilter === "all"
-      ? STATIC_DISTRIBUTIONS
-      : STATIC_DISTRIBUTIONS.filter((d) => d.status === txFilter);
+      ? distributions
+      : distributions.filter((d) => d.status === txFilter);
 
   const { metrics: liveMetrics, loading: liveLoading } = useImpactMetrics();
 
   useEffect(() => {
     let mounted = true;
+
+    const fetchData = async () => {
+      try {
+        console.log(
+          "Dashboard: Fetching distributions from:",
+          `${apiUrl}/api/admin/distributions`
+        );
+        // Fetch distributions from API
+        const distRes = await fetch(`${apiUrl}/api/admin/distributions`);
+        console.log("Dashboard: Response status:", distRes.status, distRes.ok);
+        if (distRes.ok) {
+          const distData = await distRes.json();
+          console.log("Dashboard: Fetched distributions:", distData.length);
+          if (mounted) {
+            setDistributions(distData);
+          }
+        } else {
+          console.error(
+            "Dashboard: Failed to fetch distributions:",
+            distRes.status,
+            distRes.statusText
+          );
+        }
+      } catch (err) {
+        console.error("Dashboard: Error fetching distributions:", err);
+      }
+    };
+
     // Prefer on-chain metrics; fallback to API while loading
     if (liveLoading) {
       fetchMetrics()
@@ -93,15 +121,22 @@ export default function Dashboard() {
           setMetrics(Array.isArray(m) ? m : []);
         })
         .catch(() => {})
-        .finally(() => mounted && setLoading(false));
+        .finally(() => {
+          if (mounted) {
+            setLoading(false);
+          }
+        });
     } else {
       setMetrics(liveMetrics);
       setLoading(false);
     }
+
+    fetchData();
+
     return () => {
       mounted = false;
     };
-  }, [liveMetrics, liveLoading]);
+  }, [liveMetrics, liveLoading, apiUrl]);
 
   const startVerify = async () => {
     const id = verifyInput.trim();
