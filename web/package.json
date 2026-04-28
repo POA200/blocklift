@@ -26,6 +26,7 @@
     "@stacks/transactions": "^7.3.0",
     "@stacks/wallet-sdk": "^7.2.0",
     "@tailwindcss/vite": "^4.1.17",
+    "@vercel/analytics": "^2.0.1",
     "@vercel/postgres": "^0.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

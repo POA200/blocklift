@@ -14,6 +14,7 @@ import Contact from "./pages/Contact";
 import Pay from "./pages/Pay";
 import Education from "./pages/Education";
 import Admin from "./pages/Admin";
+import { Analytics } from "@vercel/analytics/react";
 
 function ScrollToHash() {
   const { pathname, hash } = useLocation();
@@ -55,6 +56,7 @@ function App() {
           {/* fallback to home */}
           <Route path="*" element={<Home />} />
         </Routes>
+        <Analytics />
       </ThemeProvider>
     </>
   );
